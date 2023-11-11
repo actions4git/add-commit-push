@@ -25,6 +25,7 @@ inputs:
   commit-message:
     default: Automatic commit
   push-force:
+    default: false
 
 outputs:
   commit-sha:
