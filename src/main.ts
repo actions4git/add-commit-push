@@ -72,7 +72,7 @@ if (exitCode) {
   if (!pushRefspec) {
     const { exitCode } = await $({
       cwd: rootPath,
-      reject: false
+      reject: false,
     })`git symbolic-ref HEAD`;
     if (exitCode) {
       pushRefspec = stdout;
@@ -86,8 +86,9 @@ if (exitCode) {
   if (pushForce == null) {
     const { exitCode } = await $({
       cwd: rootPath,
-      reject: false
+      reject: false,
     })`git symbolic-ref HEAD`;
+    console.log(pushForce, "git symbolic-ref HEAD", exitCode);
     if (exitCode) {
       pushForce = true;
     } else {
