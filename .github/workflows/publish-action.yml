@@ -13,14 +13,8 @@ jobs:
       - uses: oven-sh/setup-bun@v1
       - run: bun install
       - run: bun run build
-      - uses: jcbhmr/configure-bun-action@v0.10.0
+      - uses: jcbhmr/configure-bun-action@v0.11.0
       # - uses: actions4git/add-commit-push@v1
-      #   with:
-      #     add-path: |
-      #       action.yml
-      #       out
-      #       .bun
-      #     add-force: true
       - run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
