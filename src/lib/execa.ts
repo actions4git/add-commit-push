@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { Readable } from "node:stream";
 
 export function $(strings, ...values) {
   if (!Array.isArray(strings)) {
@@ -14,14 +15,14 @@ export function $(strings, ...values) {
   argv = argv.map((arg) => arg.replace(keyRe, (m, i) => values[i]));
   const argv0 = argv.shift();
   const cp = spawn(argv0, argv, this);
-  const stdoutP = new Response(ReadableStream.from(cp.stdout)).text()
-  const stderrP = new Response(ReadableStream.from(cp.stderr)).text()
+  const stdoutP = new Response(Readable.toWeb(cp.stdout)).text();
+  const stderrP = new Response(Readable.toWeb(cp.stderr)).text();
   cp.then = once(cp, "exit").then(async ([exitCode]) => {
     const res = {
       stdout: await stdoutP,
       stderr: await stderrP,
       exitCode: exitCode,
-    }
+    };
     if ((this?.reject ?? true) && exitCode) {
       throw res;
     } else {
