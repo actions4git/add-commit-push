@@ -81,14 +81,13 @@ if (exitCode) {
       const tags = stdout.split(/\r?\n/g);
       console.assert(tags.length === 1, `tags=${tags} longer than 1`);
       pushRefspec = tags[0];
-      console.assert(pushForce, "push-force: false never updates tag");
     }
   }
   if (pushForce == null) {
     const { exitCode } = await $({
       cwd: rootPath,
-      reject: false,
-    })`git show-ref --verify refs/tags/${pushRefspec}`;
+      reject: false
+    })`git symbolic-ref HEAD`;
     if (exitCode) {
       pushForce = true;
     } else {
