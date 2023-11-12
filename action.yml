@@ -13,21 +13,21 @@ inputs:
   commit-author:
     default: |
       ${{ github.actor }} ${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com
-  commit-author-name:
-  commit-author-email:
+  commit-author-name: {}
+  commit-author-email: {}
   commit-committer:
     default: |
       github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-  commit-committer-name:
-  commit-committer-email:
+  commit-committer-name: {}
+  commit-committer-email: {}
   commit-message:
     default: Automated changes
   push-remote:
     default: origin
-  push-force:
+  push-force: {}
 
 outputs:
-  commit-sha:
+  commit-sha: {}
 
 # https://github.com/jcbhmr/configure-bun-action
 runs:
