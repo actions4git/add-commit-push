@@ -4,18 +4,22 @@ import { once } from "node:events";
 if (!ReadableStream.from) {
   ReadableStream.from = function (anyIterable) {
     if (!anyIterable) {
-      throw new TypeError('ReadableStream.from() expects an iterable or async iterable object.');
+      throw new TypeError(
+        "ReadableStream.from() expects an iterable or async iterable object."
+      );
     }
 
     const iterator =
-      typeof anyIterable[Symbol.asyncIterator] === 'function'
+      typeof anyIterable[Symbol.asyncIterator] === "function"
         ? anyIterable[Symbol.asyncIterator]()
-        : typeof anyIterable[Symbol.iterator] === 'function'
+        : typeof anyIterable[Symbol.iterator] === "function"
         ? anyIterable[Symbol.iterator]()
         : null;
 
     if (!iterator) {
-      throw new TypeError('ReadableStream.from() expects an iterable or async iterable object.');
+      throw new TypeError(
+        "ReadableStream.from() expects an iterable or async iterable object."
+      );
     }
 
     return new ReadableStream({
@@ -36,7 +40,6 @@ if (!ReadableStream.from) {
   };
 }
 
-
 export function $(strings, ...values) {
   if (!Array.isArray(strings)) {
     return $.bind(Object.assign(this ?? {}, strings));
@@ -50,6 +53,7 @@ export function $(strings, ...values) {
   argv = argv.map((arg) => arg.replace(keyRe, (m, i) => values[i]));
   const argv0 = argv.shift();
   const cp = spawn(argv0, argv, this ?? {});
+  console.log(cp.stdout, cp.stderr);
   const stdoutP =
     cp.stdout && new Response(ReadableStream.from(cp.stdout)).text();
   const stderrP =
