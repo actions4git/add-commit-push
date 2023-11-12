@@ -70,17 +70,18 @@ if (exitCode) {
     ? core.getBooleanInput("push-force")
     : null;
   if (!pushRefspec) {
-    const { exitCode } = await $({
+    const { exitCode, stdout } = await $({
       cwd: rootPath,
       reject: false,
     })`git symbolic-ref HEAD`;
     if (exitCode) {
-      pushRefspec = stdout;
-    } else {
       const { stdout } = await $({ cwd: rootPath })`git tag --points-at HEAD`;
+      console.assert(stdout, "no stdout from listing tags");
       const tags = stdout.split(/\r?\n/g);
-      console.assert(tags.length === 1, `tags=${tags} longer than 1`);
+      console.assert(tags.length >= 1, `tags=${tags} longer than 1`);
       pushRefspec = tags[0];
+    } else {
+      pushRefspec = stdout;
     }
   }
   if (pushForce == null) {
@@ -88,7 +89,6 @@ if (exitCode) {
       cwd: rootPath,
       reject: false,
     })`git symbolic-ref HEAD`;
-    console.log(pushForce, "git symbolic-ref HEAD", exitCode);
     if (exitCode) {
       pushForce = true;
     } else {
