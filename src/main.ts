@@ -4,7 +4,10 @@ import * as github from "@actions/github";
 import assert from "node:assert/strict";
 import { resolve, join } from "node:path";
 
-const $ = console.log
+const $ = (...a) => {
+  console.log(a)
+  return console.log
+}
 
 const rootPath = resolve(".");
 

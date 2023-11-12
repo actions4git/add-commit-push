@@ -48,6 +48,6 @@ jobs:
       - id: main
         uses: ./
         with:
-          add-path: test/number.txt
+          add-pathspec: test/number.txt
       - shell: jq -C . {0}
         run: ${{ toJSON(steps.main.outputs) }}
