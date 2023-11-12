@@ -1,39 +1,19 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 
-if (!ReadableStream.from) {
-  ReadableStream.from = function (anyIterable) {
-    if (
-      !anyIterable ||
-      (typeof anyIterable !== "object" && typeof anyIterable !== "function")
-    ) {
-      throw new TypeError(
-        "ReadableStream.from() requires an iterable or async iterable object"
-      );
-    }
-
-    const iterator =
-      anyIterable[Symbol.iterator] || anyIterable[Symbol.asyncIterator];
-
-    if (!iterator) {
-      throw new TypeError(
-        "Passed parameter does not define @@iterator or @@asyncIterator method"
-      );
-    }
-
-    return new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of anyIterable) {
-            controller.enqueue(chunk);
-          }
-          controller.close();
-        } catch (error) {
-          controller.error(error);
-        }
-      },
+function streamToText(stream) {
+  return new Promise((resolve, reject) => {
+    let data = "";
+    stream.on("data", (chunk) => {
+      data += chunk.toString();
     });
-  };
+    stream.on("end", () => {
+      resolve(data);
+    });
+    stream.on("error", (error) => {
+      reject(error);
+    });
+  });
 }
 
 export function $(strings, ...values) {
@@ -49,10 +29,8 @@ export function $(strings, ...values) {
   argv = argv.map((arg) => arg.replace(keyRe, (m, i) => values[i]));
   const argv0 = argv.shift();
   const cp = spawn(argv0, argv, this ?? {});
-  const stdoutP =
-    cp.stdout && new Response(ReadableStream.from(cp.stdout)).text();
-  const stderrP =
-    cp.stderr && new Response(ReadableStream.from(cp.stderr)).text();
+  const stdoutP = cp.stdout && streamToText(cp.stdout);
+  const stderrP = cp.stderr && streamToText(cp.stderr);
   const p = once(cp, "exit").then(async ([exitCode, signal]) => {
     const res = {
       stdout: await stdoutP,
