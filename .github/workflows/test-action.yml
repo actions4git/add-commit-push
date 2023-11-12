@@ -20,7 +20,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   test-action:
+    permissions:
+      contents: write
     strategy:
+      max-parallel: 1
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
