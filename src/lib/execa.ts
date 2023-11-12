@@ -3,27 +3,39 @@ import { once } from "node:events";
 
 if (!ReadableStream.from) {
   ReadableStream.from = function (anyIterable) {
-    if (!anyIterable || typeof anyIterable[Symbol.iterator] !== "function") {
-      throw new TypeError(
-        "ReadableStream.from() expects an iterable or async iterable object."
-      );
+    if (!anyIterable) {
+      throw new TypeError('ReadableStream.from() expects an iterable or async iterable object.');
     }
 
-    const iterator = anyIterable[Symbol.iterator]();
+    const iterator =
+      typeof anyIterable[Symbol.asyncIterator] === 'function'
+        ? anyIterable[Symbol.asyncIterator]()
+        : typeof anyIterable[Symbol.iterator] === 'function'
+        ? anyIterable[Symbol.iterator]()
+        : null;
+
+    if (!iterator) {
+      throw new TypeError('ReadableStream.from() expects an iterable or async iterable object.');
+    }
 
     return new ReadableStream({
       async pull(controller) {
-        const { value, done } = await iterator.next();
+        try {
+          const { value, done } = await iterator.next();
 
-        if (done) {
-          controller.close();
-        } else {
-          controller.enqueue(value);
+          if (done) {
+            controller.close();
+          } else {
+            controller.enqueue(value);
+          }
+        } catch (error) {
+          controller.error(error);
         }
       },
     });
   };
 }
+
 
 export function $(strings, ...values) {
   if (!Array.isArray(strings)) {
