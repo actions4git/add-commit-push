@@ -1,8 +1,23 @@
-const rootPath = core.getInput("path");
+import * as core from "@actions/core";
+import * as github from "@actions/github";
+import { glob } from "glob";
+import { $ } from "execa";
+import assert from "node:assert/strict";
+import { resolve, join } from "node:path";
 
-const addPaths = await glob(core.getMultilineInput("add-path"), {
-  ignore: ["**/.git/**"],
-});
+const rootPath = resolve(".");
+
+let addPaths: string[] | undefined;
+let addAll: true | undefined;
+if (core.getInput("add-path")) {
+  assert.equal(core.getInput("add-all"), "");
+  addPaths = await glob(core.getMultilineInput("add-path"), {
+    ignore: ["**/.git/**"],
+  });
+} else {
+  assert.equal(core.getBooleanInput("add-all"), true);
+  addAll = true;
+}
 const addForce = core.getBooleanInput("add-force");
 
 let GIT_AUTHOR_NAME: string;
@@ -37,12 +52,19 @@ if (core.getInput("commit-committer")) {
 
 const commitMessage = core.getInput("commit-message");
 
-const pushForce = core.getBooleanInput("push-force");
+const pushRemote = core.getInput("push-remote");
 
-await $({
-  stdio: "inherit",
-  cwd: rootPath,
-})`git add ${addForce ? "--force" : []} ${addPaths}`;
+if (addAll) {
+  await $({
+    stdio: "inherit",
+    cwd: rootPath,
+  })`git add --all ${addForce ? "--force" : []}`;
+} else {
+  await $({
+    stdio: "inherit",
+    cwd: rootPath,
+  })`git add ${addForce ? "--force" : []} ${addPaths}`;
+}
 const { exitCode } = await $({
   cwd: rootPath,
   reject: false,
@@ -50,6 +72,21 @@ const { exitCode } = await $({
 if (exitCode) {
   core.info(`No changes to commit`);
 } else {
+  const { stdout } = await $({
+    cwd: rootPath,
+  })`git rev-parse --abbrev-ref HEAD`;
+  let data:
+    | { type: "branch"; branch: string }
+    | { type: "tag"; tags: string[] };
+  if (stdout === "HEAD") {
+    const { stdout } = $({ cwd: rootPath })`git tag --points-at HEAD`;
+    data = {
+      type: "tag",
+      tags: stdout.split(/\r?\n/g),
+    };
+  } else {
+    data = { type: "branch", branch: stdout };
+  }
   await $({
     stdio: "inherit",
     cwd: rootPath,
@@ -60,8 +97,29 @@ if (exitCode) {
       GIT_COMMITTER_EMAIL,
     },
   })`git commit --message ${commitMessage}`;
-  await $({
-    stdio: "inherit",
-    cwd: rootPath,
-  })`git push ${pushForce ? "--force" : []}`;
+  if (data.type === "branch") {
+    const pushForce = core.getInput("push-force")
+      ? core.getBooleanInput("push-force")
+      : false;
+    await $({
+      stdio: "inherit",
+      cwd: rootPath,
+    })`git push ${pushForce ? "--force" : []} ${pushRemote} ${data.branch}`;
+  } else if (data.type === "tag") {
+    const pushForce = core.getInput("push-force")
+      ? core.getBooleanInput("push-force")
+      : true;
+    for (const tag of data.tags) {
+      await $({
+        stdio: "inherit",
+        cwd: rootPath,
+      })`git tag --force ${tag}`;
+    }
+    for (const tag of data.tags) {
+      await $({
+        stdio: "inherit",
+        cwd: rootPath,
+      })`git push ${pushForce ? "--force" : []} ${pushRemote} ${tag}`;
+    }
+  }
 }

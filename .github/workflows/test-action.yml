@@ -1,0 +1,48 @@
+name: Test action
+on:
+  push:
+    branches: "main"
+    paths-ignore:
+      - README.md
+      - LICENSE
+      - .gitignore
+      - .github/**
+      - "!.github/workflows/test-action.yml"
+  pull_request:
+    paths-ignore:
+      - README.md
+      - LICENSE
+      - .gitignore
+      - .github/**
+      - "!.github/workflows/test-action.yml"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  test-action:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      - run: bun run build
+      - uses: jcbhmr/configure-bun-action@v0.5.0
+      - shell: bun {0}
+        run: |
+          import { readFile, writeFile } from "node:fs/promises";
+          let number = JSON.parse(await readFile("test/number.txt", "utf8"))
+          number += 1;
+          await writeFile("test/number.txt", JSON.stringify(number))
+      - id: main
+        uses: ./
+        with:
+          add-path: test/number.txt
+      - shell: jq -C . {0}
+        run: ${{ toJSON(steps.main.outputs) }}
