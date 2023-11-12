@@ -14,12 +14,18 @@ export function $(strings, ...values) {
   argv = argv.map((arg) => arg.replace(keyRe, (m, i) => values[i]));
   const argv0 = argv.shift();
   const cp = spawn(argv0, argv, this);
-  cp.then = once(cp, "exit").then(([exitCode]) => {
-    delete cp.then
+  const stdoutP = new Response(ReadableStream.from(cp.stdout)).text()
+  const stderrP = new Response(ReadableStream.from(cp.stderr)).text()
+  cp.then = once(cp, "exit").then(async ([exitCode]) => {
+    const res = {
+      stdout: await stdoutP,
+      stderr: await stderrP,
+      exitCode: exitCode,
+    }
     if ((this?.reject ?? true) && exitCode) {
-      throw cp;
+      throw res;
     } else {
-      return cp;
+      return res;
     }
   });
   return cp;
