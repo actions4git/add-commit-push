@@ -74,7 +74,7 @@ if (exitCode) {
       cwd: rootPath,
     })`git rev-parse --abbrev-ref HEAD`;
     if (stdout === "HEAD") {
-      const { stdout } = $({ cwd: rootPath })`git tag --points-at HEAD`;
+      const { stdout } = await $({ cwd: rootPath })`git tag --points-at HEAD`;
       const tags = stdout.split(/\r?\n/g);
       console.assert(tags.length === 1, `tags=${tags} longer than 1`);
       pushRefspec = tags[0];
