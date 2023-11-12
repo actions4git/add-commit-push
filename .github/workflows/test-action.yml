@@ -41,7 +41,9 @@ jobs:
         run: |
           import { readFile, writeFile } from "node:fs/promises";
           let number = JSON.parse(await readFile("test/number.txt", "utf8"))
-          number += 1;
+          console.log("old number", number)
+          number = Math.random();
+          console.log("new number", number)
           await writeFile("test/number.txt", JSON.stringify(number))
       - id: main
         uses: ./
