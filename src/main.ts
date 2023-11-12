@@ -1,7 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { glob } from "glob";
-import { $ } from "execa";
+import { $ } from "./lib/execa.ts";
 import assert from "node:assert/strict";
 import { resolve, join } from "node:path";
 
