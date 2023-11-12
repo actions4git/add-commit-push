@@ -4,7 +4,7 @@ import { $ } from "./lib/execa.ts";
 import assert from "node:assert/strict";
 import { resolve, join } from "node:path";
 
-const rootPath = resolve(".");
+const rootPath = resolve(core.getInput("path"));
 
 let addPathspec: string[] | undefined;
 if (core.getInput("add-pathspec")) {
@@ -45,8 +45,6 @@ if (core.getInput("commit-committer")) {
 const commitMessage = core.getInput("commit-message");
 
 const pushRepository = core.getInput("push-repository");
-
-console.log("ok done with most of the inputs moving to add commit push");
 
 if (addPathspec) {
   await $({

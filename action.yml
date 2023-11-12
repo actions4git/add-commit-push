@@ -6,6 +6,8 @@ branding:
   color: blue
 
 inputs:
+  path:
+    default: .
   add-pathspec: {}
   add-force:
     default: false
