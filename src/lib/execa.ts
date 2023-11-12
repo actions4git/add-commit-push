@@ -5,9 +5,11 @@ function streamToText(stream) {
   return new Promise((resolve, reject) => {
     let data = "";
     stream.on("data", (chunk) => {
+      console.log("got data", chunk);
       data += chunk.toString();
     });
     stream.on("end", () => {
+      console.log("done");
       resolve(data);
     });
     stream.on("error", (error) => {
