@@ -1,8 +1,10 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import { $ } from "./lib/execa.ts";
+// import { $ } from "./lib/execa.ts";
 import assert from "node:assert/strict";
 import { resolve, join } from "node:path";
+
+const $ = console.log
 
 const rootPath = resolve(".");
 
