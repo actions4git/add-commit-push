@@ -32,4 +32,5 @@ outputs:
 # https://github.com/jcbhmr/configure-bun-action
 runs:
   using: bun1
-  main: out/main.js
+  # main: out/main.js
+  main: src/main.ts
