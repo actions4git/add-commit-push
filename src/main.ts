@@ -70,17 +70,18 @@ if (exitCode) {
     ? core.getBooleanInput("push-force")
     : null;
   if (!pushRefspec) {
-    const { stdout } = await $({
+    const { exitCode } = await $({
       cwd: rootPath,
-    })`git rev-parse --abbrev-ref HEAD`;
-    if (stdout === "HEAD") {
+      reject: false
+    })`git symbolic-ref HEAD`;
+    if (exitCode) {
+      pushRefspec = stdout;
+    } else {
       const { stdout } = await $({ cwd: rootPath })`git tag --points-at HEAD`;
       const tags = stdout.split(/\r?\n/g);
       console.assert(tags.length === 1, `tags=${tags} longer than 1`);
       pushRefspec = tags[0];
       console.assert(pushForce, "push-force: false never updates tag");
-    } else {
-      pushRefspec = stdout;
     }
   }
   if (pushForce == null) {
