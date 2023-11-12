@@ -44,11 +44,11 @@ jobs:
       - shell: bun {0}
         run: |
           import { readFile, writeFile } from "node:fs/promises";
-          let number = JSON.parse(await readFile("number.txt", "utf8"))
+          let number = JSON.parse(await readFile("README.txt", "utf8"))
           console.log("old number", number)
           number = Math.random();
           console.log("new number", number)
-          await writeFile("number.txt", JSON.stringify(number))
+          await writeFile("README.txt", JSON.stringify(number))
         working-directory: test/branch
       - id: main
         uses: ./
@@ -81,11 +81,11 @@ jobs:
       - shell: bun {0}
         run: |
           import { readFile, writeFile } from "node:fs/promises";
-          let number = JSON.parse(await readFile("number.txt", "utf8"))
+          let number = JSON.parse(await readFile("README.txt", "utf8"))
           console.log("old number", number)
           number = Math.random();
           console.log("new number", number)
-          await writeFile("number.txt", JSON.stringify(number))
+          await writeFile("README.txt", JSON.stringify(number))
         working-directory: test/tag
       - id: main
         uses: ./
