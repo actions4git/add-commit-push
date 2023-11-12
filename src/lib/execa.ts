@@ -33,8 +33,8 @@ export function $(strings, ...values) {
   const stderrP = cp.stderr && streamToText(cp.stderr);
   const p = once(cp, "exit").then(async ([exitCode, signal]) => {
     const res = {
-      stdout: await stdoutP,
-      stderr: await stderrP,
+      stdout: (await stdoutP)?.trimEnd(),
+      stderr: (await stderrP)?.trimEnd(),
       exitCode,
       signal,
     };

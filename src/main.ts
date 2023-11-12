@@ -7,16 +7,9 @@ import { resolve, join } from "node:path";
 
 const rootPath = resolve(".");
 
-let addPaths: string[] | undefined;
-let addAll: true | undefined;
-if (core.getInput("add-path")) {
-  assert.equal(core.getInput("add-all"), "");
-  addPaths = await glob(core.getMultilineInput("add-path"), {
-    ignore: ["**/.git/**"],
-  });
-} else {
-  assert.equal(core.getBooleanInput("add-all"), true);
-  addAll = true;
+let addPathspec: string[] | undefined;
+if (core.getInput("add-pathspec")) {
+  addPathspec = core.getMultilineInput("add-pathspec");
 }
 const addForce = core.getBooleanInput("add-force");
 
@@ -52,19 +45,20 @@ if (core.getInput("commit-committer")) {
 
 const commitMessage = core.getInput("commit-message");
 
-const pushRemote = core.getInput("push-remote");
+const pushRepository = core.getInput("push-repository");
 
-if (addAll) {
+if (addPathspec) {
   await $({
     stdio: "inherit",
     cwd: rootPath,
-  })`git add --all ${addForce ? "--force" : []}`;
+  })`git add ${addForce ? "--force" : []} -- ${addPathspec}`;
 } else {
   await $({
     stdio: "inherit",
     cwd: rootPath,
-  })`git add ${addForce ? "--force" : []} ${addPaths}`;
+  })`git add ${addForce ? "--force" : []} --all`;
 }
+
 const { exitCode } = await $({
   cwd: rootPath,
   reject: false,
@@ -72,21 +66,27 @@ const { exitCode } = await $({
 if (exitCode) {
   core.info(`No changes to commit`);
 } else {
-  const { stdout } = await $({
-    cwd: rootPath,
-  })`git rev-parse --abbrev-ref HEAD`;
-  let data:
-    | { type: "branch"; branch: string }
-    | { type: "tag"; tags: string[] };
-  if (stdout === "HEAD") {
-    const { stdout } = $({ cwd: rootPath })`git tag --points-at HEAD`;
-    data = {
-      type: "tag",
-      tags: stdout.split(/\r?\n/g),
-    };
-  } else {
-    data = { type: "branch", branch: stdout };
+  let pushRefspec = core.getInput("push-refspec");
+  let pushForce = core.getInput("push-force")
+    ? core.getBooleanInput("push-force")
+    : null;
+  if (!pushRefspec) {
+    const { stdout } = await $({
+      cwd: rootPath,
+    })`git rev-parse --abbrev-ref HEAD`;
+    if (stdout === "HEAD") {
+      const { stdout } = $({ cwd: rootPath })`git tag --points-at HEAD`;
+      const tags = stdout.split(/\r?\n/g);
+      console.assert(tags.length === 1, `tags=${tags} longer than 1`);
+      pushRefspec = tags[0];
+      pushForce ??= true;
+      console.assert(pushForce, "push-force: false never updates tag");
+    } else {
+      pushRefspec = stdout;
+      pushForce ??= false;
+    }
   }
+
   await $({
     stdio: "inherit",
     cwd: rootPath,
@@ -97,29 +97,14 @@ if (exitCode) {
       GIT_COMMITTER_EMAIL,
     },
   })`git commit --message ${commitMessage}`;
-  if (data.type === "branch") {
-    const pushForce = core.getInput("push-force")
-      ? core.getBooleanInput("push-force")
-      : false;
-    await $({
-      stdio: "inherit",
-      cwd: rootPath,
-    })`git push ${pushForce ? "--force" : []} ${pushRemote} ${data.branch}`;
-  } else if (data.type === "tag") {
-    const pushForce = core.getInput("push-force")
-      ? core.getBooleanInput("push-force")
-      : true;
-    for (const tag of data.tags) {
-      await $({
-        stdio: "inherit",
-        cwd: rootPath,
-      })`git tag --force ${tag}`;
-    }
-    for (const tag of data.tags) {
-      await $({
-        stdio: "inherit",
-        cwd: rootPath,
-      })`git push ${pushForce ? "--force" : []} ${pushRemote} ${tag}`;
-    }
-  }
+  const { stdout } = await $({
+    cwd: rootPath,
+  })`git rev-parse HEAD`;
+
+  await $({
+    stdio: "inherit",
+    cwd: rootPath,
+  })`git push ${
+    pushForce ? "--force" : []
+  } ${pushRepository} ${stdout}:${pushRefspec}`;
 }

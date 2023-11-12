@@ -6,8 +6,7 @@ branding:
   color: blue
 
 inputs:
-  add-path:
-    default: .
+  add-pathspec: {}
   add-force:
     default: false
   commit-author:
@@ -22,8 +21,9 @@ inputs:
   commit-committer-email: {}
   commit-message:
     default: Automated changes
-  push-remote:
+  push-repository:
     default: origin
+  push-refspec: {}
   push-force: {}
 
 outputs:
