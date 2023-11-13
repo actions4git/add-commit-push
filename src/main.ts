@@ -17,9 +17,10 @@ let GIT_AUTHOR_EMAIL: string;
 if (core.getInput("commit-author")) {
   assert.equal(core.getInput("commit-author-name"), "");
   assert.equal(core.getInput("commit-author-email"), "");
-  const [part1, part2] = core.getInput("commit-author").trim().split(/\s+/);
-  GIT_AUTHOR_NAME = part1;
-  GIT_AUTHOR_EMAIL = part2.replace(/^<|>$/g, "");
+  [GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL] = core
+    .getInput("commit-author")
+    .match(/^\s+(.+)\s+<(.+)>\s+$/)
+    .slice(1);
 } else {
   GIT_AUTHOR_NAME = core.getInput("commit-author-name", { required: true });
   GIT_AUTHOR_EMAIL = core.getInput("commit-author-email", { required: true });
@@ -30,9 +31,10 @@ let GIT_COMMITTER_EMAIL: string;
 if (core.getInput("commit-committer")) {
   assert.equal(core.getInput("commit-committer-name"), "");
   assert.equal(core.getInput("commit-committer-email"), "");
-  const [part1, part2] = core.getInput("commit-committer").trim().split(/\s+/);
-  GIT_COMMITTER_NAME = part1;
-  GIT_COMMITTER_EMAIL = part2.replace(/^<|>$/g, "");
+  [GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL] = core
+    .getInput("commit-committer")
+    .match(/^\s+(.+)\s+<(.+)>\s+$/)
+    .slice(1);
 } else {
   GIT_COMMITTER_NAME = core.getInput("commit-committer-name", {
     required: true,
