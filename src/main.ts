@@ -70,6 +70,8 @@ const commitMessage = core.getInput("commit-message");
 
 const pushRepository = core.getInput("push-repository");
 
+console.table({ GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL, GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL, "process.env.INPUT_*": Object.entries(process.env).filter(x => x[0].startsWith("INPUT_")).map(x => x.join("=")).join("\n") })
+
 if (addPathspec) {
   await $({
     stdio: "inherit",
