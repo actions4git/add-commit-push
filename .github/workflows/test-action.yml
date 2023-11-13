@@ -1,0 +1,95 @@
+name: Test action
+on:
+  push:
+    branches: "main"
+    paths-ignore:
+      - README.md
+      - LICENSE
+      - .gitignore
+      - .github/**
+      - "!.github/workflows/test-action.yml"
+  pull_request:
+    paths-ignore:
+      - README.md
+      - LICENSE
+      - .gitignore
+      - .github/**
+      - "!.github/workflows/test-action.yml"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  branch:
+    permissions:
+      contents: write
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      # - run: bun run build
+      - uses: jcbhmr/configure-bun-action@v0.11.0
+      - uses: actions/checkout@v4
+        with:
+          ref: test-branch
+          path: test/branch
+      - shell: bun {0}
+        run: |
+          import { readFile, writeFile } from "node:fs/promises";
+          let number = JSON.parse(await readFile("README.txt", "utf8"))
+          console.log("old number", number)
+          number = Math.random();
+          console.log("new number", number)
+          await writeFile("README.txt", JSON.stringify(number))
+        working-directory: test/branch
+      - id: main
+        uses: ./
+        with:
+          path: test/branch
+      - shell: jq -C . {0}
+        run: ${{ toJSON(steps.main.outputs) }}
+  tag:
+    permissions:
+      contents: write
+    strategy:
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - run: bun install
+      # - run: bun run build
+      - uses: jcbhmr/configure-bun-action@v0.11.0
+      - uses: actions/checkout@v4
+        with:
+          ref: test-tag
+          path: test/tag
+      - shell: bun {0}
+        run: |
+          import { readFile, writeFile } from "node:fs/promises";
+          let number = JSON.parse(await readFile("README.txt", "utf8"))
+          console.log("old number", number)
+          number = Math.random();
+          console.log("new number", number)
+          await writeFile("README.txt", JSON.stringify(number))
+        working-directory: test/tag
+      - id: main
+        uses: ./
+        with:
+          path: test/tag
+      - shell: jq -C . {0}
+        run: ${{ toJSON(steps.main.outputs) }}
