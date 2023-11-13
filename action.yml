@@ -1,10 +1,8 @@
 name: Add, commit, and push
 description: ✨ Automagically git add, git commit, and git push
-
 branding:
   icon: git-commit
   color: blue
-
 inputs:
   path:
     description: >
@@ -38,8 +36,9 @@ inputs:
       'commit-committer'. The author of a commit is who wrote the thing and the
       committer is who committed it to Git. It's recommended to leave this as
       the default.
-    default: |
-      ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+    default: >
+      ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor
+      }}@users.noreply.github.com>
   commit-author-name:
     description: >
       The name of the author to associate with the commit. Should be left
@@ -56,7 +55,7 @@ inputs:
       This defaults to the 'github-actions[bot]' user which is probably what you
       want. It's recommended to change the 'commit-author' before changing the
       'commit-commiter'.
-    default: |
+    default: >
       github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
   commit-committer-name:
     description: >
@@ -91,12 +90,7 @@ inputs:
       You may need to specify this if you are rewriting history or editing a
       tag. Defaults to 'false' if the 'push-refspec' is a branch and 'true' if
       it's a tag.
-
-outputs:
-  # commit-sha: {}
-
-# https://github.com/jcbhmr/configure-bun-action
+outputs: null
 runs:
-  using: bun1
-  # main: out/main.js
-  main: src/main.ts
+  using: node20
+  main: .bun/main.mjs
