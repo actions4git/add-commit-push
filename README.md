@@ -6,7 +6,8 @@
 
 ```yml
 on:
-  pull_request:
+  push:
+    branches: "main"
 jobs:
   job:
     permissions:
@@ -35,7 +36,8 @@ A convenience wrapper with sensible defaults so that you don't have to do
 
 ```yml
 on:
-  pull_request:
+  push:
+    branches: "main"
 jobs:
   job:
     permissions:
@@ -119,12 +121,15 @@ a premade action like [actions4git/setup-git] to configure the `user.name` and
   `false`.
 
 - **`commit-author`:** A `Name Here <emailhere@example.org>` AiO author name &
-  email string. This is a shortcut alternative to the independent
-  `commit-author-name` and `commit-author-email` options that are also
-  available. This defaults to the current `github.actor`. Note that this is
-  different from the `commit-committer`. [The author of a commit is who wrote
-  the thing, and the committer is who committed it to Git.] It's recommended to
-  leave this as the default.
+  email string. This is a shortcut alternative to the independant
+  'commit-author-name' and `commit-author-email` options that are also
+  available. This defaults to <b>@github-actions\[bot\]</b>. You can set this to
+  the special value `github-actions` to use the <b>@github-actions\[bot\]</b>
+  user as the author, or the special `me` value to use the current
+  `github.actor` user as the author. Note that this is different from the
+  `commit-committer`. The author of a commit is who wrote the thing and the
+  committer is who committed it to Git. It's recommended to leave this as the
+  default.
 
 - **`commit-author-name`:** The name of the author to associate with the commit.
   Should be left unspecified if `commit-author` is specified.
@@ -134,10 +139,11 @@ a premade action like [actions4git/setup-git] to configure the `user.name` and
 
 - **`commit-committer`:** A `Name Here <emailhere@example.org>` AiO author name
   & email string. This input is a shortcut for the `commit-committer-name` and
-  `commit-committer-email` inputs that can also be individually specified. This
-  defaults to the `github-actions[bot]` user which is probably what you want.
-  It's recommended to change the `commit-author` before changing the
-  `commit-committer`.
+  `commit-committer-email` inputs that can also be individually specified. You
+  can set this to the special value `github-actions` to use the
+  <b>@github-actions\[bot\]</b> user as the committer, or the special `me` value
+  to use the current `github.actor` user as the committer. If this input is
+  unspecified, the committer defaults to the author.
 
 - **`commit-committer-name`:** The name of the committer to associate with the
   commit. Should be left unspecified if `commit-committer` is specified.
@@ -173,11 +179,7 @@ TODO!
 
 ![Bun](https://img.shields.io/static/v1?style=for-the-badge&message=Bun&color=000000&logo=Bun&logoColor=FFFFFF&label=)
 
-**How do I test my changes?**
-
-The easiest way is to open a Draft Pull Request either against the upstream
-repository or against your own fork's main branch and watch the GitHub Actions
-do their thing.
+TODO!
 
 <!-- prettier-ignore-start -->
 [Git Pathspecs and How to Use Them]: https://css-tricks.com/git-pathspecs-and-how-to-use-them/

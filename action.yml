@@ -34,12 +34,13 @@ inputs:
       A 'Name Here <emailhere@example.org>' AiO author name & email string. This
       is a shortcut alternative to the independant 'commit-author-name' and
       'commit-author-email' options that are also available. This defaults to
-      the current 'github.actor'. Note that this is different from the
-      'commit-committer'. The author of a commit is who wrote the thing and the
-      committer is who committed it to Git. It's recommended to leave this as
-      the default.
-    default: |
-      ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+      @github-actions[bot]. You can set this to the special value
+      'github-actions' to use the @github-actions[bot] user as the author, or
+      the special 'me' value to use the current 'github.actor' user as the
+      author. Note that this is different from the 'commit-committer'. The
+      author of a commit is who wrote the thing and the committer is who
+      committed it to Git. It's recommended to leave this as the default.
+    default: github-actions[bot]
   commit-author-name:
     description: >
       The name of the author to associate with the commit. Should be left
@@ -53,11 +54,10 @@ inputs:
       A 'Name Here <emailhere@example.org>' AiO author name & email string. This
       input is a shortcut for the 'commit-committer-name' and
       'commit-committer-email' inputs that can also be individually specified.
-      This defaults to the 'github-actions[bot]' user which is probably what you
-      want. It's recommended to change the 'commit-author' before changing the
-      'commit-commiter'.
-    default: |
-      github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+      You can set this to the special value 'github-actions' to use the
+      @github-actions[bot] user as the committer, or the special 'me' value to
+      use the current 'github.actor' user as the committer. If this input is
+      unspecified, the committer defaults to the author.
   commit-committer-name:
     description: >
       The name of the committer to associate with the commit. Should be left

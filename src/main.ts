@@ -31,17 +31,26 @@ let GIT_COMMITTER_EMAIL: string;
 if (core.getInput("commit-committer")) {
   assert.equal(core.getInput("commit-committer-name"), "");
   assert.equal(core.getInput("commit-committer-email"), "");
-  [GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL] = core
-    .getInput("commit-committer")
-    .match(/^\s+(.+)\s+<(.+)>\s+$/)
-    .slice(1);
+  if (
+    /^\s+@?github[-_]?actions(?:\[bot\])?\s+$/.test(
+      core.getInput("commit-committer")
+    )
+  ) {
+    GIT_COMMITTER_NAME = "github-actions[bot]";
+    GIT_COMMITTER_EMAIL =
+      "41898282+github-actions[bot]@users.noreply.github.com";
+  } else if (/^\s+@?me\s+$/.test(core.getInput("commit-committer"))) {
+    GIT_COMMITTER_NAME = process.env.GITHUB_ACTOR;
+    GIT_COMMITTER_EMAIL = `${process.env.GITHUB_ACTOR_ID}+${process.env.GITHUB_ACTOR}@users.noreply.github.com`;
+  } else {
+    [GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL] = core
+      .getInput("commit-committer")
+      .match(/^\s+(.+)\s+<(.+)>\s+$/)
+      .slice(1);
+  }
 } else {
-  GIT_COMMITTER_NAME = core.getInput("commit-committer-name", {
-    required: true,
-  });
-  GIT_COMMITTER_EMAIL = core.getInput("commit-committer-email", {
-    required: true,
-  });
+  GIT_COMMITTER_NAME = core.getInput("commit-committer-name");
+  GIT_COMMITTER_EMAIL = core.getInput("commit-committer-email");
 }
 
 const commitMessage = core.getInput("commit-message");
@@ -105,8 +114,8 @@ if (exitCode) {
     env: {
       GIT_AUTHOR_NAME,
       GIT_AUTHOR_EMAIL,
-      GIT_COMMITTER_NAME,
-      GIT_COMMITTER_EMAIL,
+      ...(GIT_COMMITTER_NAME && { GIT_COMMITTER_NAME }),
+      ...(GIT_COMMITTER_EMAIL && { GIT_COMMITTER_EMAIL }),
     },
   })`git commit --message ${commitMessage}`;
   const { stdout } = await $({
