@@ -14,5 +14,5 @@ jobs:
           GH_REPO: ${{ github.repository }}
           NUMBER: ${{ github.event.pull_request.number }}
           BODY: >
-            Make sure you try your changes by forking and playing around with
+            Make sure you test your changes by forking and playing around with
             [actions4git/add-commit-push-test](https://github.com/actions4git/add-commit-push-test)
