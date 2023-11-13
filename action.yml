@@ -98,8 +98,6 @@ outputs:
   pushed: {}
   push-refspec: {}
 
-# https://github.com/jcbhmr/configure-bun-action
 runs:
-  using: bun1
-  # main: out/main.js
-  main: src/main.ts
+  using: node20
+  main: dist/main.js
