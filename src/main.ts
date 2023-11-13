@@ -17,10 +17,23 @@ let GIT_AUTHOR_EMAIL: string;
 if (core.getInput("commit-author")) {
   assert.equal(core.getInput("commit-author-name"), "");
   assert.equal(core.getInput("commit-author-email"), "");
-  [GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL] = core
-    .getInput("commit-author")
-    .match(/^\s+(.+)\s+<(.+)>\s+$/)
-    .slice(1);
+  if (
+    /^\s+@?github[-_]?actions(?:\[bot\])?\s+$/.test(
+      core.getInput("commit-author")
+    )
+  ) {
+    GIT_AUTHOR_NAME = "github-actions[bot]";
+    GIT_AUTHOR_EMAIL =
+      "41898282+github-actions[bot]@users.noreply.github.com";
+  } else if (/^\s+@?me\s+$/.test(core.getInput("commit-author"))) {
+    GIT_AUTHOR_NAME = process.env.GITHUB_ACTOR;
+    GIT_AUTHOR_EMAIL = `${process.env.GITHUB_ACTOR_ID}+${process.env.GITHUB_ACTOR}@users.noreply.github.com`;
+  } else {
+    [GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL] = core
+      .getInput("commit-author")
+      .match(/^\s+(.+)\s+<(.+)>\s+$/)
+      .slice(1);
+  }
 } else {
   GIT_AUTHOR_NAME = core.getInput("commit-author-name", { required: true });
   GIT_AUTHOR_EMAIL = core.getInput("commit-author-email", { required: true });
