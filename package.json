@@ -19,7 +19,14 @@
     "glob": "^10.3.10"
   },
   "scripts": {
-    "build": "bun build --target=bun --splitting --outdir=out --sourcemap=inline src/main.ts"
+    "build": "vite build"
   },
-  "bundleDependencies": true
+  "bundleDependencies": [
+    "@actions/core",
+    "@actions/github",
+    "@actions/tool-cache",
+    "@octokit/auth-unauthenticated",
+    "execa",
+    "yaml"
+  ]
 }
