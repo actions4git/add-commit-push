@@ -15,14 +15,9 @@ jobs:
       - run: bun run build
       - run: rm -rf node_modules
       - uses: jcbhmr/configure-bun-action@v0.11.0
-      # - uses: actions4git/add-commit-push@v1
-      - run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-      - run: git add -Af && git commit -m 'Automatic changes'
-      - run: git tag -f "$TAG" && git push -f origin "$TAG"
-        env:
-          TAG: ${{ github.event.release.tag_name }}
+      - uses: actions4git/add-commit-push@v0.2.0
+        with:
+          add-force: true
       - uses: actions/publish-action@v0.2.2
         with:
           source-tag: ${{ github.event.release.tag_name }}
