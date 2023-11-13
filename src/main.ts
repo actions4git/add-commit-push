@@ -1,8 +1,12 @@
-import * as core from "@actions/core";
-import * as github from "@actions/github";
-import { $ } from "execa";
-import assert from "node:assert/strict";
 import { resolve, join } from "node:path";
+import assert from "node:assert/strict";
+import * as core from "@actions/core";
+import { $ } from "execa";
+
+const githubContext = {
+  actor: process.env.GITHUB_ACTOR!,
+  actor_id: process.env.GITHUB_ACTOR_ID!,
+}
 
 function getNameEmailInput(
   input: string,
@@ -29,8 +33,8 @@ function getNameEmailInput(
       name = "github-actions[bot]";
       email = "41898282+github-actions[bot]@users.noreply.github.com";
     } else if (meRe.test(short)) {
-      name = github.actor;
-      email = `${github.actor_id}+${github.actor}@users.noreply.github.com`;
+      name = githubContext.actor;
+      email = `${githubContext.actor_id}+${githubContext.actor}@users.noreply.github.com`;
     } else {
       const matched = short.match(/^\s*(.+)\s+<(.+)>\s*$/)?.slice(1);
       assert(matched);
