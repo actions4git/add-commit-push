@@ -18,20 +18,20 @@ if (core.getInput("commit-author")) {
   assert.equal(core.getInput("commit-author-name"), "");
   assert.equal(core.getInput("commit-author-email"), "");
   if (
-    /^\s+@?github[-_]?actions(?:\[bot\])?\s+$/.test(
+    /^\s*@?github[-_]?actions(?:\[bot\])?\s*$/.test(
       core.getInput("commit-author")
     )
   ) {
     GIT_AUTHOR_NAME = "github-actions[bot]";
     GIT_AUTHOR_EMAIL =
       "41898282+github-actions[bot]@users.noreply.github.com";
-  } else if (/^\s+@?me\s+$/.test(core.getInput("commit-author"))) {
+  } else if (/^\s*@?me\s*$/.test(core.getInput("commit-author"))) {
     GIT_AUTHOR_NAME = process.env.GITHUB_ACTOR;
     GIT_AUTHOR_EMAIL = `${process.env.GITHUB_ACTOR_ID}+${process.env.GITHUB_ACTOR}@users.noreply.github.com`;
   } else {
     [GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL] = core
       .getInput("commit-author")
-      .match(/^\s+(.+)\s+<(.+)>\s+$/)
+      .match(/^\s*(.+)\s+<(.+)>\s*$/)
       .slice(1);
   }
 } else {
@@ -45,20 +45,20 @@ if (core.getInput("commit-committer")) {
   assert.equal(core.getInput("commit-committer-name"), "");
   assert.equal(core.getInput("commit-committer-email"), "");
   if (
-    /^\s+@?github[-_]?actions(?:\[bot\])?\s+$/.test(
+    /^\s*@?github[-_]?actions(?:\[bot\])?\s*$/.test(
       core.getInput("commit-committer")
     )
   ) {
     GIT_COMMITTER_NAME = "github-actions[bot]";
     GIT_COMMITTER_EMAIL =
       "41898282+github-actions[bot]@users.noreply.github.com";
-  } else if (/^\s+@?me\s+$/.test(core.getInput("commit-committer"))) {
+  } else if (/^\s*@?me\s*$/.test(core.getInput("commit-committer"))) {
     GIT_COMMITTER_NAME = process.env.GITHUB_ACTOR;
     GIT_COMMITTER_EMAIL = `${process.env.GITHUB_ACTOR_ID}+${process.env.GITHUB_ACTOR}@users.noreply.github.com`;
   } else {
     [GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL] = core
       .getInput("commit-committer")
-      .match(/^\s+(.+)\s+<(.+)>\s+$/)
+      .match(/^\s*(.+)\s+<(.+)>\s*$/)
       .slice(1);
   }
 } else {
