@@ -22,7 +22,7 @@ jobs:
 
 ➕ Adds all files by default \
 👨 Uses `github.actor` as the default author \
-🤖 Uses @github-actions\[bot\] as the default committer \
+🤖 Uses <b>@github-actions\[bot\]</b> as the default committer \
 🔼 Pushes changes to the current branch or tag \
 🏷️ Will automatically use `--force` if it's a Git tag
 
