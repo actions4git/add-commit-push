@@ -93,7 +93,10 @@ inputs:
       it's a tag.
 
 outputs:
-  # commit-sha: {}
+  committed: {}
+  commit-sha: {}
+  pushed: {}
+  push-refspec: {}
 
 # https://github.com/jcbhmr/configure-bun-action
 runs:
