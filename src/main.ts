@@ -4,73 +4,59 @@ import { $ } from "execa";
 import assert from "node:assert/strict";
 import { resolve, join } from "node:path";
 
+function getNameEmailInput(
+  input: string,
+  options: { required: true },
+): [string, string];
+function getNameEmailInput(
+  input: string,
+  options?: { required?: boolean },
+): [string | null, string | null];
+function getNameEmailInput(
+  input: string,
+  options: { required?: boolean } = {},
+) {
+  const { required = false } = options;
+  const githubActionsRe = /^\s*@?github[-_]?actions(?:\[bot\])?\s*$/;
+  const meRe = /^\s*@?me\s*$/;
+  const short = core.getInput(input);
+  let name: string | null;
+  let email: string | null;
+  if (short) {
+    assert.equal(core.getInput(`${input}-name`), "");
+    assert.equal(core.getInput(`${input}-email`), "");
+    if (githubActionsRe.test(short)) {
+      name = "github-actions[bot]";
+      email = "41898282+github-actions[bot]@users.noreply.github.com";
+    } else if (meRe.test(short)) {
+      name = github.actor;
+      email = `${github.actor_id}+${github.actor}@users.noreply.github.com`;
+    } else {
+      const matched = short.match(/^\s*(.+)\s+<(.+)>\s*$/)?.slice(1);
+      assert(matched);
+      [name, email] = matched;
+    }
+  } else {
+    name = core.getInput(`${input}-name`, { required }) || null;
+    email = core.getInput(`${input}-email`, { required }) || null;
+  }
+  return [name, email];
+}
+
 const rootPath = resolve(core.getInput("path"));
-
-let addPathspec: string[] | undefined;
-if (core.getInput("add-pathspec")) {
-  addPathspec = core.getMultilineInput("add-pathspec");
-}
+const addPathspec = core.getInput("add-pathspec")
+  ? core.getMultilineInput("add-pathspec")
+  : null;
 const addForce = core.getBooleanInput("add-force");
-
-let GIT_AUTHOR_NAME: string;
-let GIT_AUTHOR_EMAIL: string;
-if (core.getInput("commit-author")) {
-  assert.equal(core.getInput("commit-author-name"), "");
-  assert.equal(core.getInput("commit-author-email"), "");
-  if (
-    /^\s*@?github[-_]?actions(?:\[bot\])?\s*$/.test(
-      core.getInput("commit-author")
-    )
-  ) {
-    GIT_AUTHOR_NAME = "github-actions[bot]";
-    GIT_AUTHOR_EMAIL =
-      "41898282+github-actions[bot]@users.noreply.github.com";
-  } else if (/^\s*@?me\s*$/.test(core.getInput("commit-author"))) {
-    GIT_AUTHOR_NAME = process.env.GITHUB_ACTOR;
-    GIT_AUTHOR_EMAIL = `${process.env.GITHUB_ACTOR_ID}+${process.env.GITHUB_ACTOR}@users.noreply.github.com`;
-  } else {
-    [GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL] = core
-      .getInput("commit-author")
-      .match(/^\s*(.+)\s+<(.+)>\s*$/)
-      .slice(1);
-  }
-} else {
-  GIT_AUTHOR_NAME = core.getInput("commit-author-name", { required: true });
-  GIT_AUTHOR_EMAIL = core.getInput("commit-author-email", { required: true });
-}
-
-let GIT_COMMITTER_NAME: string;
-let GIT_COMMITTER_EMAIL: string;
-if (core.getInput("commit-committer")) {
-  assert.equal(core.getInput("commit-committer-name"), "");
-  assert.equal(core.getInput("commit-committer-email"), "");
-  if (
-    /^\s*@?github[-_]?actions(?:\[bot\])?\s*$/.test(
-      core.getInput("commit-committer")
-    )
-  ) {
-    GIT_COMMITTER_NAME = "github-actions[bot]";
-    GIT_COMMITTER_EMAIL =
-      "41898282+github-actions[bot]@users.noreply.github.com";
-  } else if (/^\s*@?me\s*$/.test(core.getInput("commit-committer"))) {
-    GIT_COMMITTER_NAME = process.env.GITHUB_ACTOR;
-    GIT_COMMITTER_EMAIL = `${process.env.GITHUB_ACTOR_ID}+${process.env.GITHUB_ACTOR}@users.noreply.github.com`;
-  } else {
-    [GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL] = core
-      .getInput("commit-committer")
-      .match(/^\s*(.+)\s+<(.+)>\s*$/)
-      .slice(1);
-  }
-} else {
-  GIT_COMMITTER_NAME = core.getInput("commit-committer-name");
-  GIT_COMMITTER_EMAIL = core.getInput("commit-committer-email");
-}
-
+const [GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL] = getNameEmailInput("commit-author", {
+  required: true,
+});
+const [
+  GIT_COMMITTER_NAME = GIT_AUTHOR_NAME,
+  GIT_COMMITTER_EMAIL = GIT_AUTHOR_EMAIL,
+] = getNameEmailInput("commit-committer");
 const commitMessage = core.getInput("commit-message");
-
 const pushRepository = core.getInput("push-repository");
-
-console.table({ GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL, GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL, "process.env.INPUT_*": Object.entries(process.env).filter(x => x[0].startsWith("INPUT_")).map(x => x.join("=")).join("\n") })
 
 if (addPathspec) {
   await $({
@@ -115,12 +101,7 @@ if (exitCode) {
       cwd: rootPath,
       reject: false,
     })`git symbolic-ref HEAD`;
-    if (exitCode) {
-      pushForce = true;
-    } else {
-      // TODO: Any other force-push situations?
-      pushForce = false;
-    }
+    pushForce = !!exitCode;
   }
 
   await $({
@@ -129,8 +110,8 @@ if (exitCode) {
     env: {
       GIT_AUTHOR_NAME,
       GIT_AUTHOR_EMAIL,
-      ...(GIT_COMMITTER_NAME && { GIT_COMMITTER_NAME }),
-      ...(GIT_COMMITTER_EMAIL && { GIT_COMMITTER_EMAIL }),
+      GIT_COMMITTER_NAME,
+      GIT_COMMITTER_EMAIL,
     },
   })`git commit --message ${commitMessage}`;
   const { stdout } = await $({
