@@ -17,9 +17,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: rm -rf node_modules
-      - run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+      - uses: actions4git/setup-git@v1
       - run: git add -Af && git commit -m 'npm run build'
       - run: git tag -f "$TAG" && git push -f origin "$TAG"
         env:
