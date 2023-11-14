@@ -82,21 +82,19 @@ inputs:
     default: origin
   push-refspec:
     description: >
-      A specific branch or tag name to push to. If this is a tag, 'push-force'
-      will default to 'true' unless explicitly set otherwise. Defaults to
-      whatever the current Git 'HEAD' target is.
+      A specific branch or tag name to push to. If unset, this will just run
+      'git push [repository]' with no refspec. Defaults to unset.
   push-force:
     description: >
       Whether or not to use the '--force' parameter when doing the 'git push'.
       You may need to specify this if you are rewriting history or editing a
-      tag. Defaults to 'false' if the 'push-refspec' is a branch and 'true' if
-      it's a tag.
+      tag. Defaults to 'false'.
+    default: false
 
 outputs:
   committed: {}
   commit-sha: {}
   pushed: {}
-  push-refspec: {}
 
 runs:
   using: node20
