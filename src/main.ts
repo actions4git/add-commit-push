@@ -111,8 +111,8 @@ commit: {
 }
 
 push: {
-  const pushRepository = core.getInput("push-repository");
-  let pushRefspec = core.getInput("push-refspec") || null;
+  // const pushRepository = core.getInput("push-repository");
+  // let pushRefspec = core.getInput("push-refspec") || null;
   let pushForce = core.getBooleanInput("push-force");
 
   const { stdout } = await $({
@@ -126,9 +126,7 @@ push: {
   await $({
     stdio: "inherit",
     cwd: rootPath,
-  })`git push ${pushForce ? "--force" : []} ${pushRepository} ${
-    pushRefspec ? pushRefspec : []
-  }`;
+  })`git push ${pushForce ? "--force" : []}`;
 
   core.setOutput("pushed", true);
 }

@@ -72,23 +72,10 @@ inputs:
       string if you want to specify a title and body. The default is 'Automated
       changes'.
     default: Automated changes
-  push-repository:
-    description: >
-      The first argument to 'git push [repository] [refspec]'. You can change
-      this to another remote name like 'upstream' (as long as you have push
-      rights) or another Git remote entirely like
-      'https://github.com/octocat/another-repo.git'. The default 'origin' is
-      probably what you want.
-    default: origin
-  push-refspec:
-    description: >
-      A specific branch or tag name to push to. If unset, this will just run
-      'git push [repository]' with no refspec. Defaults to unset.
   push-force:
     description: >
       Whether or not to use the '--force' parameter when doing the 'git push'.
-      You may need to specify this if you are rewriting history or editing a
-      tag. Defaults to 'false'.
+      Defaults to 'false'.
     default: false
 
 outputs:

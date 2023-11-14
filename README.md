@@ -129,18 +129,8 @@ a premade action like [actions4git/setup-git] to configure the `user.name` and
   can be a multiline string if you want to specify a title and body. The default
   is 'Automated changes'.
 
-- **`push-repository`:** The first argument to
-  `git push [repository] [refspec]`. You can change this to another remote name
-  like `upstream` (as long as you have push rights) or another Git remote
-  entirely like `https://github.com/octocat/another-repo.git`. The default
-  `origin` is probably what you want.
-
-- **`push-refspec`:** A specific branch or tag name to push to. If unset, this
-  will just run `git push [repository]` with no refspec. Defaults to unset.
-
 - **`push-force`:** Whether or not to use the `--force` parameter when doing the
-  `git push`. You may need to specify this if you are rewriting history or
-  editing a tag. Defaults to `false`.
+  `git push`. Defaults to `false`.
 
 ### Outputs
 
