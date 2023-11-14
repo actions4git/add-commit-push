@@ -35,12 +35,12 @@ jobs:
       - shell: bash
         run: |
           shopt -s dotglob nullglob
-          mv ./* ../add-commit-push
+          mv ./* ../temp
       - uses: actions/checkout@v4
         with:
           ref: test-branch
       - shell: bash
         run: echo $RANDOM > README.txt
-      - uses: ./
+      - uses: ../temp
   # pull-request:
   # pull-request-fork:
