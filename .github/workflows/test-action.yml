@@ -1,19 +1,46 @@
 name: Test action [MANUAL]
 on:
+  push:
+    branches: "main"
+    paths-ignore:
+      - .gitignore
+      - README.md
+      - LICENSE
+      - .github/**
+      - "!.github/workflows/test-action.yml"
   pull_request:
-    types: [opened, reopened]
+    paths-ignore:
+      - .gitignore
+      - README.md
+      - LICENSE
+      - .github/**
+      - "!.github/workflows/test-action.yml"
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 jobs:
-  test-action:
+  branch:
+    concurrency: ${{ github.workflow }}-branch
     permissions:
-      issues: write
-      pull-requests: write
+      contents: write
     runs-on: ubuntu-latest
     steps:
-      - run: gh pr comment "$NUMBER" --body "$BODY"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          NUMBER: ${{ github.event.pull_request.number }}
-          BODY: >
-            Make sure you test your changes by forking and playing around with
-            [actions4git/add-commit-push-test](https://github.com/actions4git/add-commit-push-test)
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - shell: bash
+        run: |
+          shopt -s dotglob nullglob
+          mv ./* ../add-commit-push
+      - uses: actions/checkout@v4
+        with:
+          ref: test-branch
+      - shell: bash
+        run: echo $RANDOM > README.txt
+      - uses: ./
+  # pull-request:
+  # pull-request-fork:
