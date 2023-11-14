@@ -6,8 +6,7 @@
 
 ```yml
 on:
-  push:
-    branches: "main"
+  pull_request:
 jobs:
   job:
     permissions:
@@ -25,7 +24,7 @@ jobs:
 👨 Uses `github.actor` as the default author \
 🤖 Uses <b>@github-actions\[bot\]</b> as the default committer \
 🔼 Pushes changes to the current branch or tag \
-🏷️ Will automatically use `--force` if it's a Git tag
+🤩 Works great for the common use cases!
 
 A convenience wrapper with sensible defaults so that you don't have to do
 `git add`, `git commit`, and `git push` manually all the time. 😉
@@ -41,6 +40,7 @@ A convenience wrapper with sensible defaults so that you don't have to do
 on:
   push:
     branches: "main"
+  pull_request:
 jobs:
   job:
     permissions:
@@ -55,27 +55,6 @@ jobs:
 🔒 Make sure you have the `permissions` set to `contents: write`! We need to be
 able to edit the repository contents to push things.
 
-<details><summary>You can also use this GitHub Action with tags/releases</summary>
-
-```yml
-on:
-  release:
-    types: released
-jobs:
-  job:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: echo "$TAG" > VERSION.txt
-        env:
-          TAG: ${{ github.event.release.tag_name }}
-      - uses: actions4git/add-commit-push@v1
-```
-
-</details>
-
 If you're looking to have more control than the options provided below, it's
 best if you tap in to the `git` CLI directly. The only tricky bit is setting a
 default Git user (it's unset by default). You can either set it manually or use
@@ -84,23 +63,14 @@ a premade action like [actions4git/setup-git] to configure the `user.name` and
 
 ```yml
 - uses: actions/checkout@v4
-
 - uses: actions4git/setup-git@v1
-# OR
-- run: |
-    git config user.name "$GITHUB_ACTOR"
-    git config user.email "$GITHUB_ACTOR_ID+$GITHUB_ACTOR@users.noreply.github.com"
-# OR
-- run: |
-    git config user.name 'github-actions[bot]'
-    git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-
-# Then you can do whatever you want!
-- run: git add ...
-- run: git rebase ...
-- run: git merge ...
-- run: git commit ...
-- run: git push ...
+# Then you can do whatever you want as the @github-actions[bot] user!
+- run: git add random.txt
+- run: git tag --force v1.0.0
+- run: git rebase --interactive HEAD~3
+- run: git merge --squash feature-branch
+- run: git commit --message 'My custom commit message'
+- run: git push origin other-branch:main --force
 ```
 
 ### Inputs
@@ -130,8 +100,8 @@ a premade action like [actions4git/setup-git] to configure the `user.name` and
   the special value `github-actions` to use the <b>@github-actions\[bot\]</b>
   user as the author, or the special `me` value to use the current
   `github.actor` user as the author. Note that this is different from the
-  `commit-committer`. The author of a commit is who wrote the thing and the
-  committer is who committed it to Git. It's recommended to leave this as the
+  `commit-committer`. [The author of a commit is who wrote the thing and the
+  committer is who committed it to Git.] It's recommended to leave this as the
   default.
 
 - **`commit-author-name`:** The name of the author to associate with the commit.
@@ -165,14 +135,12 @@ a premade action like [actions4git/setup-git] to configure the `user.name` and
   entirely like `https://github.com/octocat/another-repo.git`. The default
   `origin` is probably what you want.
 
-- **`push-refspec`:** A specific branch or tag name to push to. If this is a
-  tag, `push-force` will default to `true` unless explicitly set otherwise.
-  Defaults to whatever the current Git `HEAD` target is.
+- **`push-refspec`:** A specific branch or tag name to push to. If unset, this
+  will just run `git push [repository]` with no refspec. Defaults to unset.
 
 - **`push-force`:** Whether or not to use the `--force` parameter when doing the
   `git push`. You may need to specify this if you are rewriting history or
-  editing a tag. Defaults to `false` if the `push-refspec` is a branch and
-  `true` if it's a tag.
+  editing a tag. Defaults to `false`.
 
 ### Outputs
 
@@ -185,6 +153,7 @@ TODO!
 TODO!
 
 <!-- prettier-ignore-start -->
+[actions4git/setup-git]: https://github.com/actions4git/setup-git
 [Git Pathspecs and How to Use Them]: https://css-tricks.com/git-pathspecs-and-how-to-use-them/
-[The author of a commit is who wrote the thing, and the committer is who committed it to Git.]: https://stackoverflow.com/questions/18750808/difference-between-author-and-committer-in-git
+[The author of a commit is who wrote the thing and the committer is who committed it to Git.]: https://stackoverflow.com/questions/18750808/difference-between-author-and-committer-in-git
 <!-- prettier-ignore-end -->
