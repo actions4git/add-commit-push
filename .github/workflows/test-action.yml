@@ -35,7 +35,8 @@ jobs:
       - shell: bash
         run: |
           shopt -s dotglob nullglob
-          mv ./* ../temp
+          mkdir -p ../temp
+          mv ./* ../temp/
       - uses: actions/checkout@v4
         with:
           ref: test-branch
