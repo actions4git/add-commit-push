@@ -23,7 +23,7 @@ jobs:
 ➕ Adds all files by default \
 👨 Uses `github.actor` as the default author \
 🤖 Uses <b>@github-actions\[bot\]</b> as the default committer \
-🔼 Pushes changes to the current branch or tag \
+🔼 Pushes changes to the current branch \
 🤩 Works great for the common use cases!
 
 A convenience wrapper with sensible defaults so that you don't have to do
@@ -72,6 +72,8 @@ a premade action like [actions4git/setup-git] to configure the `user.name` and
 - run: git commit --message 'My custom commit message'
 - run: git push origin other-branch:main --force
 ```
+
+🏷️ Automatic tag updating coming soon! Contributions welcome! ❤️
 
 ### Inputs
 
@@ -134,13 +136,25 @@ a premade action like [actions4git/setup-git] to configure the `user.name` and
 
 ### Outputs
 
-TODO!
+- **`committed`:** Whether or not anything was actually committed to the
+  repository locally. This will be `true` if there were any changes and `false`
+  if not.
+
+- **`commit-sha`:** The SHA of the commit that was created. Will not be set if
+  nothing was committed.
+
+- **`pushed`:** Whether or not anything was actually pushed to the remote
+  repository. This will be `true` if there were any changes that were pushed and
+  `false` if not.
 
 ## Development
 
-![Bun](https://img.shields.io/static/v1?style=for-the-badge&message=Bun&color=000000&logo=Bun&logoColor=FFFFFF&label=)
+![Node.js](https://img.shields.io/static/v1?style=for-the-badge&message=Node.js&color=339933&logo=Node.js&logoColor=FFFFFF&label=)
 
-TODO!
+**How do I test my changes?**
+
+Open a Draft Pull Request and some magic GitHub Actions will run to test the
+action.
 
 <!-- prettier-ignore-start -->
 [actions4git/setup-git]: https://github.com/actions4git/setup-git

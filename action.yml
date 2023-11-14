@@ -79,9 +79,19 @@ inputs:
     default: false
 
 outputs:
-  committed: {}
-  commit-sha: {}
-  pushed: {}
+  committed:
+    description: >
+      Whether or not anything was actually committed to the repository locally.
+      This will be 'true' if there were any changes and 'false' if not.
+  commit-sha:
+    description: >
+      The SHA of the commit that was created. Will not be set if nothing was
+      committed.
+  pushed:
+    description: >
+      Whether or not anything was actually pushed to the remote repository. This
+      will be 'true' if there were any changes that were pushed and 'false' if
+      not.
 
 runs:
   using: node20
