@@ -72,11 +72,12 @@ inputs:
       string if you want to specify a title and body. The default is 'Automated
       changes'.
     default: Automated changes
-  push-force:
-    description: >
-      Whether or not to use the '--force' parameter when doing the 'git push'.
-      Defaults to 'false'.
-    default: false
+  tag-force:
+    default: true
+  tag-tagname: {}
+  push-repository: {}
+  push-refspec: {}
+  push-force: {}
 
 outputs:
   committed:
