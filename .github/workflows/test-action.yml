@@ -21,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions4git/setup-git@v1
-      - run: gh repo clone actions4git/add-commit-push-test .
+      - run: git clone "https://x:$TOKEN@github.com/actions4git/add-commit-push-test.git" .
         env:
-          GITHUB_TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
+          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
       - run: echo '{"sha":"${{ github.sha }}"}' > branch.json
       - run: git add --all
       - run: git commit --message 'Trigger branch'
@@ -32,9 +32,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions4git/setup-git@v1
-      - run: gh repo clone actions4git/add-commit-push-test .
+      - run: git clone "https://x:$TOKEN@github.com/actions4git/add-commit-push-test.git" .
         env:
-          GITHUB_TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
+          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
       - run: echo '{"sha":"${{ github.sha }}"}' > tag.json
       - run: git add --all
       - run: git commit --message 'Trigger tag'
@@ -44,9 +44,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions4git/setup-git@v1
-      - run: gh repo clone actions4git/add-commit-push-test .
+      - run: git clone "https://x:$TOKEN@github.com/actions4git/add-commit-push-test.git" .
         env:
-          GITHUB_TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
+          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
       - run: echo '{"sha":"${{ github.sha }}"}' > pull-request.json
       - run: git add --all
       - run: git commit --message 'Trigger pull-request'
@@ -55,12 +55,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions4git/setup-git@v1
-      - run: gh repo clone actions4git/add-commit-push-test .
+      - run: git clone "https://x:$TOKEN@github.com/actions4git/add-commit-push-test.git" .
         env:
-          GITHUB_TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
+          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
       - run: echo '{"sha":"${{ github.sha }}"}' > pull-request-fork.json
       - run: git add --all
       - run: git commit --message 'Trigger pull-request'
-      - run: git push --force "https://x:$TOKEN@github.com/actions4git/add-commit-push-test-pull-request-fork" main
+      - run: git push --force "https://x:$TOKEN@github.com/actions4git/add-commit-push-test-pull-request-fork.git" main
         env:
           TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
