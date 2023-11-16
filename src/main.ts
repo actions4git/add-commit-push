@@ -2,218 +2,148 @@ import { resolve, join } from "node:path";
 import assert from "node:assert/strict";
 import * as core from "@actions/core";
 import { $ } from "execa";
-
-const githubContext = {
-  actor: process.env.GITHUB_ACTOR!,
-  actor_id: process.env.GITHUB_ACTOR_ID!,
-  event_name: process.env.GITHUB_EVENT_NAME!,
-  workspace: process.env.GITHUB_WORKSPACE!,
-};
-
-function getNameEmailInput(
-  input: string,
-  options: { required: true }
-): [string, string];
-function getNameEmailInput(
-  input: string,
-  options?: { required?: boolean }
-): [string | null, string | null];
-function getNameEmailInput(
-  input: string,
-  options: { required?: boolean } = {}
-) {
-  const { required = false } = options;
-  const githubActionsRe = /^\s*@?github[-_]?actions(?:\[bot\])?\s*$/;
-  const meRe = /^\s*@?me\s*$/;
-  const short = core.getInput(input);
-  let name: string | null;
-  let email: string | null;
-  if (short) {
-    assert.equal(core.getInput(`${input}-name`), "");
-    assert.equal(core.getInput(`${input}-email`), "");
-    if (githubActionsRe.test(short)) {
-      name = "github-actions[bot]";
-      email = "41898282+github-actions[bot]@users.noreply.github.com";
-    } else if (meRe.test(short)) {
-      name = githubContext.actor;
-      email = `${githubContext.actor_id}+${githubContext.actor}@users.noreply.github.com`;
-    } else {
-      const matched = short.match(/^\s*(.+)\s+<(.+)>\s*$/)?.slice(1);
-      assert(matched);
-      [name, email] = matched;
-    }
-  } else {
-    name = core.getInput(`${input}-name`, { required }) || null;
-    email = core.getInput(`${input}-email`, { required }) || null;
-  }
-  return [name, email];
-}
+import * as github from "@actions/github";
 
 const rootPath = resolve(core.getInput("path"));
+const $r = $({ cwd: rootPath });
+const $rs = $({ cwd: rootPath, reject: false });
 
-add: {
-  const addPathspec = core.getInput("add-pathspec")
-    ? core.getMultilineInput("add-pathspec")
-    : null;
-  const addForce = core.getBooleanInput("add-force");
+async function add(pathspecs: string[], options: { force?: boolean } = {}) {
+  const { force = false } = options;
+  await $r`git add ${force ? "--force" : []} -- ${pathspecs}`;
+}
+add.all = async (options: { force?: boolean } = {}) => {
+  const { force = false } = options;
+  await $r`git add --all ${force ? "--force" : []}`;
+};
 
-  if (addPathspec) {
-    await $({
-      stdio: "inherit",
-      cwd: rootPath,
-    })`git add ${addForce ? "--force" : []} -- ${addPathspec}`;
+async function commit(
+  message: string,
+  options: { author?: string; committer?: string } = {}
+): string {
+  let { author, committer } = options;
+  author ??= "github-actions[bot]";
+  committer ??= author;
+  const re1 = /^\s*@?github[-_]?actions(?:\[bot\])?\s*$/;
+  const re2 = /^\s*@?me\s*$/;
+  const re3 = /^\s*(.+)\s+<(.+)>\s*$/;
+  if (author) {
+    if (re1.test(author)) {
+      author = `github-actions[bot] <github-actions[bot]@users.noreply.github.com>`;
+    } else if (re2.test(author)) {
+      author = `${github.context.actor} <${github.context.actor}@users.noreply.github.com>`;
+    }
+  }
+  if (committer) {
+    if (re1.test(committer)) {
+      committer = `github-actions[bot] <github-actions[bot]@users.noreply.github.com>`;
+    } else if (re2.test(committer)) {
+      committer = `${github.context.actor} <${github.context.actor}@users.noreply.github.com>`;
+    }
+  }
+  const env = { __proto__: null };
+  if (author) {
+    const [authorName, authorEmail] = author.match(re3)!.slice(1);
+    env.GIT_AUTHOR_NAME = authorName;
+    env.GIT_AUTHOR_EMAIL = authorEmail;
+  }
+  if (committer) {
+    const [committerName, committerEmail] = committer.match(re3)!.slice(1);
+    env.GIT_COMMITTER_NAME = committerName;
+    env.GIT_COMMITTER_EMAIL = committerEmail;
+  }
+  const $re = $({ cwd: rootPath, env });
+  await $re`git commit --message ${message}`;
+  const { stdout: sha } = await $r`git rev-parse HEAD`;
+  return sha;
+}
+
+async function tag(name: string, options: { force?: boolean } = {}) {
+  const { force = false } = options;
+  await $r`git tag ${force ? "--force" : []} ${name}`;
+}
+
+async function push(
+  repository: string | null,
+  refspec: string | null,
+  options: { force?: boolean } = {}
+) {
+  const { force = false } = options;
+  if (repository && refspec) {
+    await $r`git push ${force ? "--force" : []} ${repository} ${refspec}`;
+  } else if (repository) {
+    await $r`git push ${force ? "--force" : []} ${repository}`;
   } else {
-    await $({
-      stdio: "inherit",
-      cwd: rootPath,
-    })`git add ${addForce ? "--force" : []} --all`;
+    await $r`git push ${force ? "--force" : []}`;
   }
 }
 
-commit: {
-  const [GIT_AUTHOR_NAME, GIT_AUTHOR_EMAIL] = getNameEmailInput(
-    "commit-author",
-    { required: true }
-  );
-  let [GIT_COMMITTER_NAME, GIT_COMMITTER_EMAIL] =
-    getNameEmailInput("commit-committer");
-  GIT_COMMITTER_NAME ??= GIT_AUTHOR_NAME;
-  GIT_COMMITTER_EMAIL ??= GIT_AUTHOR_EMAIL;
-  const commitMessage = core.getInput("commit-message");
+add: {
+  const force = core.getBooleanInput("add-force");
+  if (core.getInput("add-pathspec")) {
+    await add(core.getMultilineInput("add-pathspec"), { force });
+  } else {
+    await add.all({ force });
+  }
+}
 
-  const { exitCode } = await $({
-    cwd: rootPath,
-    reject: false,
-  })`git diff --cached`;
-  if (exitCode) {
+let sha: string;
+commit: {
+  if ((await $rs`git diff --cached`).exitCode) {
+    ({ stdout: sha } = await $r`git rev-parse HEAD`);
     core.setOutput("committed", false);
+    core.setOutput("commit-sha", sha);
     break commit;
   }
 
-  await $({
-    stdio: "inherit",
-    cwd: rootPath,
-    env: {
-      GIT_AUTHOR_NAME,
-      GIT_AUTHOR_EMAIL,
-      GIT_COMMITTER_NAME,
-      GIT_COMMITTER_EMAIL,
-    },
-  })`git commit --message ${commitMessage}`;
+  const author =
+    core.getInput("author") ||
+    `${core.getInput("author-name")} <${core.getInput("author-email")}>`;
+  const committer =
+    core.getInput("committer") ||
+    `${core.getInput("committer-name")} <${core.getInput("committer-email")}>`;
+  const message = core.getInput("commit-message");
 
+  sha = await commit(message, { author, committer });
   core.setOutput("committed", true);
-
-  const { stdout } = await $({
-    cwd: rootPath,
-  })`git rev-parse HEAD`;
-  core.setOutput("commit-sha", stdout);
+  core.setOutput("commit-sha", sha);
 }
 
-async function tag() {}
+const data = await (async () => {
+  try {
+    const { stdout: tag } = await $r`git describe --exact-match --tags ${sha}`;
+    return { type: "tag", tag } as const;
+  } catch {}
 
-async function push() {}
+  try {
+    const { stdout: ref } = await $r`git rev-parse --symbolic-full-name ${sha}`;
+    if (ref.startsWith("refs/pull/")) {
+      const head = ref.split("/")[2];
+      return { type: "pull-request", head } as const;
+    }
+  } catch {}
 
-if (rootPath === githubContext.workspace) {
-  if (githubContext.event_name === "push") {
-    await push()
-  } else if (githubContext.event_name === "pull_request") {
-    await push()
-  } else if (githubContext.event_name === "release") {
-    await tag()
-    await push()
-  } else {
-    await push()
-  }
-} else {
-  await push()
-}
+  const { stdout: branch } = await $r`git branch --show-current`;
+  return { type: "branch", branch } as const;
+})();
 
-let tagTagname: string | null;
-let tagForce: boolean | null = null;
 tag: {
-  tagTagname = core.getInput("tag-tagname") || null;
-  if (!tagTagname) {
-    // git show-ref | grep $(git rev-parse HEAD)
-    const showRef = await $({ cwd: rootPath })`git show-ref`;
-    const revParse = await $({ cwd: rootPath })`git rev-parse HEAD`;
-    const refLines = showRef.stdout
-      .split(/\r?\n/g)
-      .filter((x) => x.includes(revParse.stdout));
-    if (!refLines.length) {
-      break tag;
-    }
-    for (const refLine of refLines) {
-      const refName = refLine.split(" ").at(-1)!;
-      const match = refName.match(/^refs\/tags\/(.+)/);
-      if (match) {
-        tagTagname = match[1];
-        break;
-      }
-    }
-    if (!tagTagname) {
-      break tag;
-    }
+  if (data.type === "tag") {
+    const name = core.getInput("tag-tagname") || data.tag;
+    const force = core.getInput("tag-force")
+      ? core.getBooleanInput("tag-force")
+      : !!data.tag;
+    await tag(name, { force });
   }
-
-  tagForce = core.getInput("tag-force")
-    ? core.getBooleanInput("tag-force")
-    : null;
-  if (tagForce == null) {
-    if (!core.getInput("tag-tagname")) {
-      tagForce = true;
-    }
-  }
-
-  await $({ cwd: rootPath })`git tag ${
-    tagForce ? "--force" : []
-  } ${tagTagname}`;
 }
-console.table({ tagTagname, tagForce });
 
 push: {
-  const pushRepository = core.getInput("push-repository");
-
-  let pushRefspec = core.getInput("push-refspec") || null;
-  if (!pushRefspec) {
-    if (tagTagname) {
-      pushRefspec = tagTagname;
-    }
-
-    const { stdout } = await $({
-      cwd: rootPath,
-    })`git rev-parse --abbrev-ref HEAD`;
-    if (stdout === "HEAD") {
-      throw new DOMException("no branch detectable");
-    } else {
-      pushRefspec = stdout;
-    }
-  }
-
-  let pushForce = core.getInput("push-force")
+  const repository = core.getInput("push-repository");
+  let refspec = core.getInput("push-refspec") || data.tag;
+  let force = core.getInput("push-force")
     ? core.getBooleanInput("push-force")
-    : null;
-  if (pushForce == null) {
-    if (tagTagname && tagForce) {
-      pushForce = true;
-    } else {
-      pushForce = false;
-    }
-  }
+    : data.type === "tag";
 
-  // const { stdout } = await $({
-  //   cwd: rootPath,
-  // })`git cherry -v`;
-  // if (!stdout) {
-  //   core.setOutput("pushed", false);
-  //   break push;
-  // }
-
-  await $({
-    stdio: "inherit",
-    cwd: rootPath,
-  })`git push ${pushForce ? "--force" : []} ${pushRepository} ${
-    pushRefspec ? pushRefspec : []
-  }`;
-
+  await push(repository, refspec);
   core.setOutput("pushed", true);
 }

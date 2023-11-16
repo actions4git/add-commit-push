@@ -72,8 +72,7 @@ inputs:
       string if you want to specify a title and body. The default is 'Automated
       changes'.
     default: Automated changes
-  tag-force:
-    default: true
+  tag-force: {}
   tag-tagname: {}
   push-repository:
     default: origin
