@@ -34,8 +34,8 @@ async function commit(
       author = `${github.context.actor} <${github.context.actor}@users.noreply.github.com>`;
     }
   } else {
-    const { stdout: authorName } = await $r`git config --get user.name`;
-    const { stdout: authorEmail } = await $r`git config --get user.email`;
+    const { stdout: authorName } = await $rs`git config --get user.name`;
+    const { stdout: authorEmail } = await $rs`git config --get user.email`;
     if (authorName && authorEmail) {
       author = `${authorName} <${authorEmail}>`;
     } else {
