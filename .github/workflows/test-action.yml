@@ -14,7 +14,9 @@ jobs:
       - run: git add --all
       - run: git commit --message 'Trigger branch'
       - run: git push --force
+      - run: sleep 10s
   tag:
+    needs: branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions4git/setup-git@v1
@@ -26,7 +28,9 @@ jobs:
       - run: git commit --message 'Trigger tag'
       - run: git tag --force v0.0.0
       - run: git push --force origin v0.0.0
+      - run: sleep 10s
   pull-request:
+    needs: tag
     runs-on: ubuntu-latest
     steps:
       - uses: actions4git/setup-git@v1
@@ -37,7 +41,9 @@ jobs:
       - run: git add --all
       - run: git commit --message 'Trigger pull-request'
       - run: git push --force origin main:pull-request
+      - run: sleep 10s
   pull-request-fork:
+    needs: pull-request
     runs-on: ubuntu-latest
     steps:
       - uses: actions4git/setup-git@v1
@@ -50,3 +56,4 @@ jobs:
       - run: git push --force "https://x:$TOKEN@github.com/actions4git/add-commit-push-test-pull-request-fork.git" main
         env:
           TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
+      - run: sleep 10s
