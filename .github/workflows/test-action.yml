@@ -38,8 +38,8 @@ jobs:
       - run: echo '{"sha":"${{ github.sha }}"}' > tag.json
       - run: git add --all
       - run: git commit --message 'Trigger tag'
-      - run: git tag --force tag
-      - run: git push --force origin tag
+      - run: git tag --force v0.0.0
+      - run: git push --force origin v0.0.0
   pull-request:
     runs-on: ubuntu-latest
     steps:
