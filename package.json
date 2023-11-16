@@ -8,5 +8,8 @@
   },
   "scripts": {
     "build": "vite build"
+  },
+  "dependencies": {
+    "@actions/github": "^6.0.0"
   }
 }
