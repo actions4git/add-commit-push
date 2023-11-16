@@ -43,7 +43,7 @@ async function commit(
     }
   }
 
-  committer ??= author;
+  committer ||= author;
   if (re1.test(committer)) {
     committer = `github-actions[bot] <github-actions[bot]@users.noreply.github.com>`;
   } else if (re2.test(committer)) {
