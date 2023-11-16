@@ -119,7 +119,13 @@ tag: {
     if (!refLine) {
       break tag;
     }
-    tagTagname = refLine.split(" ").at(-1)!
+    const refName = refLine.split(" ").at(-1)!
+    const match = refName.match(/^refs\/tags\/(.+)/)
+    if (match) {
+      tagTagname = match[1]
+    } else {
+      break tag;
+    }
   }
 
   tagForce = core.getInput("tag-force") ? core.getBooleanInput("tag-force") : null
