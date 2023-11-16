@@ -4,6 +4,8 @@ import * as core from "@actions/core";
 import { $ } from "execa";
 import * as github from "@actions/github";
 
+process.env.NODE_DEBUG = "execa";
+
 const rootPath = resolve(core.getInput("path"));
 const $r = $({ cwd: rootPath });
 const $rs = $({ cwd: rootPath, reject: false });
