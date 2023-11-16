@@ -169,13 +169,13 @@ push: {
     }
   }
 
-  const { stdout } = await $({
-    cwd: rootPath,
-  })`git cherry -v ${pushRepository} ${pushRefspec ? pushRefspec : []}`;
-  if (!stdout) {
-    core.setOutput("pushed", false);
-    break push;
-  }
+  // const { stdout } = await $({
+  //   cwd: rootPath,
+  // })`git cherry -v`;
+  // if (!stdout) {
+  //   core.setOutput("pushed", false);
+  //   break push;
+  // }
 
   await $({
     stdio: "inherit",
