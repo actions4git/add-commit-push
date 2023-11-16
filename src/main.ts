@@ -22,40 +22,44 @@ async function commit(
   options: { author?: string; committer?: string } = {}
 ): Promise<string> {
   let { author, committer } = options;
-  author ??= "github-actions[bot]";
-  committer ??= author;
+
   const re1 = /^\s*@?github[-_]?actions(?:\[bot\])?\s*$/;
   const re2 = /^\s*@?me\s*$/;
   const re3 = /^\s*(.+)\s+<(.+)>\s*$/;
+
   if (author) {
     if (re1.test(author)) {
       author = `github-actions[bot] <github-actions[bot]@users.noreply.github.com>`;
     } else if (re2.test(author)) {
       author = `${github.context.actor} <${github.context.actor}@users.noreply.github.com>`;
     }
+  } else {
+    const { stdout: authorName } = await $r`git config --get user.name`;
+    const { stdout: authorEmail } = await $r`git config --get user.email`;
+    author = `${authorName} <${authorEmail}>`;
   }
-  if (committer) {
-    if (re1.test(committer)) {
-      committer = `github-actions[bot] <github-actions[bot]@users.noreply.github.com>`;
-    } else if (re2.test(committer)) {
-      committer = `${github.context.actor} <${github.context.actor}@users.noreply.github.com>`;
-    }
+
+  committer ??= author;
+  if (re1.test(committer)) {
+    committer = `github-actions[bot] <github-actions[bot]@users.noreply.github.com>`;
+  } else if (re2.test(committer)) {
+    committer = `${github.context.actor} <${github.context.actor}@users.noreply.github.com>`;
   }
+
   const env: Record<string, string> = { __proto__: null! };
-  if (author) {
-    const match = author.match(re3);
-    assert(match, `${author} does not match ${re3}`);
-    const [authorName, authorEmail] = match.slice(1);
-    env.GIT_AUTHOR_NAME = authorName;
-    env.GIT_AUTHOR_EMAIL = authorEmail;
-  }
-  if (committer) {
-    const match = committer.match(re3);
-    assert(match, `${committer} does not match ${re3}`);
-    const [committerName, committerEmail] = match.slice(1);
-    env.GIT_COMMITTER_NAME = committerName;
-    env.GIT_COMMITTER_EMAIL = committerEmail;
-  }
+
+  const authorMatch = author.match(re3);
+  assert(authorMatch, `${author} does not match ${re3}`);
+  const [authorName, authorEmail] = authorMatch.slice(1);
+  env.GIT_AUTHOR_NAME = authorName;
+  env.GIT_AUTHOR_EMAIL = authorEmail;
+
+  const committerMatch = committer.match(re3);
+  assert(committerMatch, `${committer} does not match ${re3}`);
+  const [committerName, committerEmail] = committerMatch.slice(1);
+  env.GIT_COMMITTER_NAME = committerName;
+  env.GIT_COMMITTER_EMAIL = committerEmail;
+
   const $re = $({ cwd: rootPath, env });
   await $re`git commit --message ${message}`;
   const { stdout: sha } = await $r`git rev-parse HEAD`;
