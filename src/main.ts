@@ -20,7 +20,7 @@ add.all = async (options: { force?: boolean } = {}) => {
 async function commit(
   message: string,
   options: { author?: string; committer?: string } = {}
-): string {
+): Promise<string> {
   let { author, committer } = options;
   author ??= "github-actions[bot]";
   committer ??= author;
@@ -41,14 +41,18 @@ async function commit(
       committer = `${github.context.actor} <${github.context.actor}@users.noreply.github.com>`;
     }
   }
-  const env = { __proto__: null };
+  const env: Record<string, string> = { __proto__: null! };
   if (author) {
-    const [authorName, authorEmail] = author.match(re3)!.slice(1);
+    const match = author.match(re3);
+    assert(match, `${author} does not match ${re3}`);
+    const [authorName, authorEmail] = match.slice(1);
     env.GIT_AUTHOR_NAME = authorName;
     env.GIT_AUTHOR_EMAIL = authorEmail;
   }
   if (committer) {
-    const [committerName, committerEmail] = committer.match(re3)!.slice(1);
+    const match = committer.match(re3);
+    assert(match, `${committer} does not match ${re3}`);
+    const [committerName, committerEmail] = match.slice(1);
     env.GIT_COMMITTER_NAME = committerName;
     env.GIT_COMMITTER_EMAIL = committerEmail;
   }
@@ -64,8 +68,8 @@ async function tag(name: string, options: { force?: boolean } = {}) {
 }
 
 async function push(
-  repository: string | null,
-  refspec: string | null,
+  repository: string | null | undefined,
+  refspec: string | null | undefined,
   options: { force?: boolean } = {}
 ) {
   const { force = false } = options;
@@ -144,6 +148,6 @@ push: {
     ? core.getBooleanInput("push-force")
     : data.type === "tag";
 
-  await push(repository, refspec);
+  await push(repository, refspec, { force });
   core.setOutput("pushed", true);
 }
