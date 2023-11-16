@@ -153,11 +153,17 @@ a premade action like [actions4git/setup-git] to configure the `user.name` and
 
 **How do I test my changes?**
 
-Open a Draft Pull Request and some magic GitHub Actions will run to test the
-action.
+The testing setup is a bit complicated. There's a separate
+[actions4git/add-commit-push-test] and
+[actions4git/add-commit-push-test-pull-request-fork] testing setup that is
+manually invoked. When you open a Pull Request make sure you request that a
+person with write access manually runs those tests! They're a bit too complex to
+run automatically on each push. 🤷‍♂️
 
 <!-- prettier-ignore-start -->
 [actions4git/setup-git]: https://github.com/actions4git/setup-git
 [Git Pathspecs and How to Use Them]: https://css-tricks.com/git-pathspecs-and-how-to-use-them/
 [The author of a commit is who wrote the thing and the committer is who committed it to Git.]: https://stackoverflow.com/questions/18750808/difference-between-author-and-committer-in-git
+[actions4git/add-commit-push-test]: https://github.com/actions4git/add-commit-push-test
+[actions4git/add-commit-push-test-pull-request-fork]: https://github.com/actions4git/add-commit-push-test-pull-request-fork
 <!-- prettier-ignore-end -->
