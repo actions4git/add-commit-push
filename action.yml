@@ -40,7 +40,6 @@ inputs:
       author. Note that this is different from the 'commit-committer'. The
       author of a commit is who wrote the thing and the committer is who
       committed it to Git. It's recommended to leave this as the default.
-    default: github-actions[bot]
   commit-author-name:
     description: >
       The name of the author to associate with the commit. Should be left

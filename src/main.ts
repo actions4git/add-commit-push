@@ -110,10 +110,17 @@ commit: {
 
   const author =
     core.getInput("author") ||
-    `${core.getInput("author-name")} <${core.getInput("author-email")}>`;
+    (core.getInput("author-name") && core.getInput("author-email"))
+      ? `${core.getInput("author-name")} <${core.getInput("author-email")}>`
+      : undefined;
   const committer =
     core.getInput("committer") ||
-    `${core.getInput("committer-name")} <${core.getInput("committer-email")}>`;
+    (core.getInput("committer-name") && core.getInput("committer-email"))
+      ? `${core.getInput("committer-name")} <${core.getInput(
+          "committer-email"
+        )}>`
+      : undefined;
+
   const message = core.getInput("commit-message");
 
   sha = await commit(message, { author, committer });
