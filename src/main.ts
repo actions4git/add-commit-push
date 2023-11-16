@@ -138,7 +138,7 @@ tag: {
       tagForce= true
     }
   }
-  
+
   await $({ cwd: rootPath })`git tag ${tagForce ? "--force" : []} ${tagTagname}`
 }
 console.table({ tagTagname, tagForce })
@@ -171,7 +171,7 @@ push: {
 
   const { stdout } = await $({
     cwd: rootPath,
-  })`git cherry -v`;
+  })`git cherry -v ${pushRepository} ${pushRefspec ? pushRefspec : []}`;
   if (!stdout) {
     core.setOutput("pushed", false);
     break push;
