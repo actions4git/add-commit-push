@@ -160,6 +160,12 @@ manually invoked. When you open a Pull Request make sure you request that a
 person with write access manually runs those tests! They're a bit too complex to
 run automatically on each push. 🤷‍♂️
 
+- [Test action workflow runs](https://github.com/actions4git/add-commit-push/actions/workflows/test-action.yml)
+- [Test branch results](https://github.com/actions4git/add-commit-push-test/actions/workflows/test-branch.yml)
+- [Test tag results](https://github.com/actions4git/add-commit-push-test/actions/workflows/test-tag.yml)
+- [Test Pull Request results](https://github.com/actions4git/add-commit-push-test/actions/workflows/test-pull-request.yml)
+- [Test Pull Request fork results](https://github.com/actions4git/add-commit-push-test/actions/workflows/test-pull-request-fork.yml)
+
 <!-- prettier-ignore-start -->
 [actions4git/setup-git]: https://github.com/actions4git/setup-git
 [Git Pathspecs and How to Use Them]: https://css-tricks.com/git-pathspecs-and-how-to-use-them/
