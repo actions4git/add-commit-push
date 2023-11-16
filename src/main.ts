@@ -2,9 +2,7 @@ import { resolve, join } from "node:path";
 import assert from "node:assert/strict";
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-
-process.env.NODE_DEBUG = "execa";
-const { $ } = await import("execa");
+import { $ } from "execa";
 
 const rootPath = resolve(core.getInput("path"));
 const $r = $({ cwd: rootPath });
@@ -94,9 +92,13 @@ async function push(
 
 add: {
   const force = core.getBooleanInput("add-force");
+  core.info(`add: force=${force}`);
   if (core.getInput("add-pathspec")) {
-    await add(core.getMultilineInput("add-pathspec"), { force });
+    const pathspecs = core.getMultilineInput("add-pathspec");
+    core.info(`add: pathspecs=${JSON.stringify(pathspecs)}`);
+    await add(pathspecs, { force });
   } else {
+    core.info(`add: all`);
     await add.all({ force });
   }
 }
@@ -104,8 +106,10 @@ add: {
 let before: string;
 commit: {
   ({ stdout: before } = await $r`git rev-parse HEAD`);
+  core.info(`commit: before=${before}`);
 
   if ((await $rs`git diff --cached`).exitCode) {
+    core.info(`commit: no changes`);
     core.setOutput("committed", false);
     core.setOutput("commit-sha", before);
     break commit;
@@ -116,6 +120,8 @@ commit: {
     (core.getInput("author-name") && core.getInput("author-email"))
       ? `${core.getInput("author-name")} <${core.getInput("author-email")}>`
       : undefined;
+  core.info(`commit: author=${author}`);
+
   const committer =
     core.getInput("committer") ||
     (core.getInput("committer-name") && core.getInput("committer-email"))
@@ -123,22 +129,28 @@ commit: {
           "committer-email"
         )}>`
       : undefined;
+  core.info(`commit: committer=${committer}`);
 
   const message = core.getInput("commit-message");
+  core.info(`commit: message=${message}`);
 
   const sha = await commit(message, { author, committer });
+  core.info(`commit: sha=${sha}`);
+
   core.setOutput("committed", true);
   core.setOutput("commit-sha", sha);
 }
 
 const data = await (async () => {
   try {
-    const { stdout: tag } = await $r`git describe --exact-match --tags ${before}`;
+    const { stdout: tag } =
+      await $r`git describe --exact-match --tags ${before}`;
     return { type: "tag", tag } as const;
   } catch {}
 
   try {
-    const { stdout: ref } = await $r`git rev-parse --symbolic-full-name ${before}`;
+    const { stdout: ref } =
+      await $r`git rev-parse --symbolic-full-name ${before}`;
     if (ref.startsWith("refs/pull/")) {
       const head = ref.split("/")[2];
       return { type: "pull-request", head } as const;
@@ -148,23 +160,30 @@ const data = await (async () => {
   const { stdout: branch } = await $r`git branch --show-current`;
   return { type: "branch", branch } as const;
 })();
+core.info(`data=${JSON.stringify(data)}`);
 
 tag: {
   if (data.type === "tag") {
+    core.info(`tag: tag=${data.tag}`);
     const name = core.getInput("tag-tagname") || data.tag;
+    core.info(`tag: name=${name}`);
     const force = core.getInput("tag-force")
       ? core.getBooleanInput("tag-force")
       : !!data.tag;
+    core.info(`tag: force=${force}`);
     await tag(name, { force });
   }
 }
 
 push: {
   const repository = core.getInput("push-repository");
-  let refspec = core.getInput("push-refspec") || data.tag;
-  let force = core.getInput("push-force")
+  core.info(`push: repository=${repository}`);
+  const refspec = core.getInput("push-refspec") || data.tag;
+  core.info(`push: refspec=${refspec}`);
+  const force = core.getInput("push-force")
     ? core.getBooleanInput("push-force")
     : data.type === "tag";
+  core.info(`push: force=${force}`);
 
   await push(repository, refspec, { force });
   core.setOutput("pushed", true);
