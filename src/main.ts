@@ -4,9 +4,9 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { $ } from "execa";
 
-const rootPath = resolve(core.getInput("path"));
-const $r = $({ cwd: rootPath });
-const $rs = $({ cwd: rootPath, reject: false });
+const root = resolve(core.getInput("path"));
+const $r = $({ cwd: root });
+const $rs = $({ cwd: root, reject: false });
 
 async function add(pathspecs: string[], options: { force?: boolean } = {}) {
   const { force = false } = options;
@@ -64,7 +64,7 @@ async function commit(
   env.GIT_COMMITTER_NAME = committerName;
   env.GIT_COMMITTER_EMAIL = committerEmail;
 
-  const $re = $({ cwd: rootPath, env });
+  const $re = $({ cwd: root, env });
   await $re`git commit --message ${message}`;
   const { stdout: sha } = await $r`git rev-parse HEAD`;
   return sha;
@@ -148,17 +148,12 @@ const data = await (async () => {
     return { type: "tag", tag } as const;
   } catch {}
 
-  try {
-    const { stdout: ref } =
-      await $r`git rev-parse --symbolic-full-name ${before}`;
-    if (ref.startsWith("refs/pull/")) {
-      const head = ref.split("/")[2];
-      return { type: "pull-request", head } as const;
-    }
-  } catch {}
-
   const { stdout: branch } = await $r`git branch --show-current`;
-  return { type: "branch", branch } as const;
+  if (branch) {
+    return { type: "branch", branch } as const;
+  }
+
+  return { type: "unknown" } as const;
 })();
 core.info(`data=${JSON.stringify(data)}`);
 
@@ -176,10 +171,40 @@ tag: {
 }
 
 push: {
-  const repository = core.getInput("push-repository");
+  let repository = core.getInput("push-repository");
+  if (
+    !repository &&
+    root === process.env.GITHUB_WORKSPACE! &&
+    github.context.eventName === "pull_request"
+  ) {
+    repository = github.context.payload.pull_request!.head.repo.clone_url;
+    const token = core.getInput("push-token");
+    if (token) {
+      // https://github.com/... => https://x:$TOKEN@github.com/...
+      repository = repository.replace(/^https:\/\//, `https://x:${token}@`);
+    }
+  }
   core.info(`push: repository=${repository}`);
-  const refspec = core.getInput("push-refspec") || data.tag;
+
+  let refspec = core.getInput("push-refspec");
+  if (!refspec) {
+    if (data.type === "tag") {
+      refspec = `HEAD:${data.tag}`;
+    } else if (data.type === "branch") {
+      refspec = `HEAD:${data.branch}`;
+    } else if (
+      root === process.env.GITHUB_WORKSPACE! &&
+      github.context.eventName === "pull_request"
+    ) {
+      refspec = `HEAD:${github.context.payload.pull_request!.head.ref}`;
+    } else {
+      throw new DOMException(`could not determine refspec`, "OperationError");
+    }
+  } else if (!refspec.startsWith("HEAD:") && !refspec.includes(":")) {
+    refspec = `HEAD:${refspec}`;
+  }
   core.info(`push: refspec=${refspec}`);
+
   const force = core.getInput("push-force")
     ? core.getBooleanInput("push-force")
     : data.type === "tag";

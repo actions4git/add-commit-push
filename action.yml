@@ -73,8 +73,9 @@ inputs:
     default: Automated changes
   tag-force: {}
   tag-tagname: {}
-  push-repository:
-    default: origin
+  push-repository: {}
+  push-token:
+    default: ${{ github.token }}
   push-refspec: {}
   push-force: {}
 
