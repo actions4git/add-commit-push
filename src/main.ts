@@ -36,7 +36,11 @@ async function commit(
   } else {
     const { stdout: authorName } = await $r`git config --get user.name`;
     const { stdout: authorEmail } = await $r`git config --get user.email`;
-    author = `${authorName} <${authorEmail}>`;
+    if (authorName && authorEmail) {
+      author = `${authorName} <${authorEmail}>`;
+    } else {
+      author = `github-actions[bot] <github-actions[bot]@users.noreply.github.com>`;
+    }
   }
 
   committer ??= author;
