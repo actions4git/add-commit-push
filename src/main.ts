@@ -107,9 +107,10 @@ commit: {
   core.setOutput("commit-sha", stdout);
 }
 
-let tagTagname
+let tagTagname: string | null
+let tagForce: boolean | null = null
 tag: {
-  tagTagname = core.getInput("tag-tagname")
+  tagTagname = core.getInput("tag-tagname") || null
   if (!tagTagname) {
     // git show-ref | grep $(git rev-parse HEAD)
     const showRef = await $({ cwd: rootPath })`git show-ref`
@@ -121,7 +122,7 @@ tag: {
     tagTagname = refLine.split(" ").at(-1)!
   }
 
-  let tagForce = core.getInput("tag-force") ? core.getBooleanInput("tag-force") : null
+  tagForce = core.getInput("tag-force") ? core.getBooleanInput("tag-force") : null
   if (tagForce == null) {
     if (!core.getInput("tag-tagname")) {
       tagForce= true
@@ -130,6 +131,7 @@ tag: {
   
   await $({ cwd: rootPath })`git tag ${tagForce ? "--force" : []} ${tagTagname}`
 }
+console.table({ tagTagname, tagForce })
 
 push: {
   const pushRepository = core.getInput("push-repository");
@@ -143,21 +145,19 @@ push: {
 
   let pushForce = core.getInput("push-force") ? core.getBooleanInput("push-force") : null;
   if (pushForce == null) {
-    if (tagTagname) {
+    if (tagTagname && tagForce) {
       pushForce = true
     } else {
       pushForce = false
     }
   }
 
-  if (!tagTagname) {
-    const { stdout } = await $({
-      cwd: rootPath,
-    })`git cherry -v`;
-    if (!stdout) {
-      core.setOutput("pushed", false);
-      break push;
-    }
+  const { stdout } = await $({
+    cwd: rootPath,
+  })`git cherry -v`;
+  if (!stdout) {
+    core.setOutput("pushed", false);
+    break push;
   }
 
   await $({
