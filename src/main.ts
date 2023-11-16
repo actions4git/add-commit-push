@@ -132,15 +132,7 @@ tag: {
 }
 
 push: {
-  let pushRepository = core.getInput("push-repository");
-  if (!pushRepository) {
-    const { stdout } = await $({ cwd: rootPath })`git config checkout.defaultRemote`
-    if (stdout) {
-      pushRepository = stdout
-    } else {
-      pushRepository = "origin"
-    }
-  }
+  const pushRepository = core.getInput("push-repository");
 
   let pushRefspec = core.getInput("push-refspec") || null;
   if (!pushRefspec) {

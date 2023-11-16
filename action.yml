@@ -75,7 +75,8 @@ inputs:
   tag-force:
     default: true
   tag-tagname: {}
-  push-repository: {}
+  push-repository:
+    default: origin
   push-refspec: {}
   push-force: {}
 
