@@ -101,12 +101,13 @@ add: {
   }
 }
 
-let sha: string;
+let before: string;
 commit: {
+  ({ stdout: before } = await $r`git rev-parse HEAD`);
+
   if ((await $rs`git diff --cached`).exitCode) {
-    ({ stdout: sha } = await $r`git rev-parse HEAD`);
     core.setOutput("committed", false);
-    core.setOutput("commit-sha", sha);
+    core.setOutput("commit-sha", before);
     break commit;
   }
 
@@ -125,19 +126,19 @@ commit: {
 
   const message = core.getInput("commit-message");
 
-  sha = await commit(message, { author, committer });
+  const sha = await commit(message, { author, committer });
   core.setOutput("committed", true);
   core.setOutput("commit-sha", sha);
 }
 
 const data = await (async () => {
   try {
-    const { stdout: tag } = await $r`git describe --exact-match --tags ${sha}`;
+    const { stdout: tag } = await $r`git describe --exact-match --tags ${before}`;
     return { type: "tag", tag } as const;
   } catch {}
 
   try {
-    const { stdout: ref } = await $r`git rev-parse --symbolic-full-name ${sha}`;
+    const { stdout: ref } = await $r`git rev-parse --symbolic-full-name ${before}`;
     if (ref.startsWith("refs/pull/")) {
       const head = ref.split("/")[2];
       return { type: "pull-request", head } as const;
