@@ -15,33 +15,52 @@ on:
       - LICENSE
       - .github/**
       - "!.github/workflows/test-action.yml"
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: true
+concurrency: ${{ github.workflow }}
 jobs:
   branch:
-    concurrency: ${{ github.workflow }}-branch
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - shell: bash
-        run: |
-          shopt -s dotglob nullglob
-          mkdir -p ../temp
-          mv ./* ../temp/
-      - uses: actions/checkout@v4
-        with:
-          ref: test-branch
-      - shell: bash
-        run: echo $RANDOM > README.txt
-      - uses: ./../temp
-  # pull-request:
-  # pull-request-fork:
+      - uses: actions4git/setup-git@v1
+      - run: gh repo clone actions4git/add-commit-push-test .
+        env:
+          GITHUB_TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
+      - run: echo '{"sha":"${{ github.sha }}"}' > branch.json
+      - run: git add --all
+      - run: git commit --message 'Trigger branch'
+      - run: git push --force
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions4git/setup-git@v1
+      - run: gh repo clone actions4git/add-commit-push-test .
+        env:
+          GITHUB_TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
+      - run: echo '{"sha":"${{ github.sha }}"}' > tag.json
+      - run: git add --all
+      - run: git commit --message 'Trigger tag'
+      - run: git tag --force tag
+      - run: git push --force origin tag
+  pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions4git/setup-git@v1
+      - run: gh repo clone actions4git/add-commit-push-test .
+        env:
+          GITHUB_TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
+      - run: echo '{"sha":"${{ github.sha }}"}' > pull-request.json
+      - run: git add --all
+      - run: git commit --message 'Trigger pull-request'
+      - run: git push --force origin main:pull-request
+  pull-request-fork:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions4git/setup-git@v1
+      - run: gh repo clone actions4git/add-commit-push-test .
+        env:
+          GITHUB_TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
+      - run: echo '{"sha":"${{ github.sha }}"}' > pull-request-fork.json
+      - run: git add --all
+      - run: git commit --message 'Trigger pull-request'
+      - run: git push --force "https://x:$TOKEN@github.com/actions4git/add-commit-push-test-pull-request-fork" main
+        env:
+          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
