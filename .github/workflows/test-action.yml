@@ -60,7 +60,7 @@ jobs:
           TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
       - run: echo '{"sha":"${{ github.sha }}"}' > pull-request-fork.json
       - run: git add --all
-      - run: git commit --message 'Trigger pull-request'
+      - run: git commit --message 'Trigger pull-request-fork'
       - run: git push --force "https://x:$TOKEN@github.com/actions4git/add-commit-push-test-pull-request-fork.git" main
         env:
           TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
