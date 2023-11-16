@@ -115,15 +115,19 @@ tag: {
     // git show-ref | grep $(git rev-parse HEAD)
     const showRef = await $({ cwd: rootPath })`git show-ref`
     const revParse = await $({ cwd: rootPath })`git rev-parse HEAD`
-    const refLine = showRef.stdout.split(/\r?\n/g).find(x => x.includes(revParse.stdout))
-    if (!refLine) {
+    const refLines = showRef.stdout.split(/\r?\n/g).filter(x => x.includes(revParse.stdout))
+    if (!refLines.length) {
       break tag;
     }
-    const refName = refLine.split(" ").at(-1)!
-    const match = refName.match(/^refs\/tags\/(.+)/)
-    if (match) {
-      tagTagname = match[1]
-    } else {
+    for (const refLine of refLines) {
+      const refName = refLine.split(" ").at(-1)!
+      const match = refName.match(/^refs\/tags\/(.+)/)
+      if (match) {
+        tagTagname = match[1]
+        break;
+      }
+    }
+    if (!tagTagname) {
       break tag;
     }
   }
@@ -146,6 +150,13 @@ push: {
   if (!pushRefspec) {
     if (tagTagname) {
       pushRefspec = tagTagname
+    }
+
+    const { stdout } = await $({ cwd: rootPath })`git rev-parse --abbrev-ref HEAD`
+    if (stdout === "HEAD") {
+      throw new DOMException("no branch detectable")
+    } else {
+      pushRefspec = stdout
     }
   }
 
