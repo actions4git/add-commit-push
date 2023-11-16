@@ -6,6 +6,8 @@ import { $ } from "execa";
 const githubContext = {
   actor: process.env.GITHUB_ACTOR!,
   actor_id: process.env.GITHUB_ACTOR_ID!,
+  event_name: process.env.GITHUB_EVENT_NAME!,
+  workspace: process.env.GITHUB_WORKSPACE!,
 };
 
 function getNameEmailInput(
@@ -107,23 +109,44 @@ commit: {
   core.setOutput("commit-sha", stdout);
 }
 
-let tagTagname: string | null
-let tagForce: boolean | null = null
+async function tag() {}
+
+async function push() {}
+
+if (rootPath === githubContext.workspace) {
+  if (githubContext.event_name === "push") {
+    await push()
+  } else if (githubContext.event_name === "pull_request") {
+    await push()
+  } else if (githubContext.event_name === "release") {
+    await tag()
+    await push()
+  } else {
+    await push()
+  }
+} else {
+  await push()
+}
+
+let tagTagname: string | null;
+let tagForce: boolean | null = null;
 tag: {
-  tagTagname = core.getInput("tag-tagname") || null
+  tagTagname = core.getInput("tag-tagname") || null;
   if (!tagTagname) {
     // git show-ref | grep $(git rev-parse HEAD)
-    const showRef = await $({ cwd: rootPath })`git show-ref`
-    const revParse = await $({ cwd: rootPath })`git rev-parse HEAD`
-    const refLines = showRef.stdout.split(/\r?\n/g).filter(x => x.includes(revParse.stdout))
+    const showRef = await $({ cwd: rootPath })`git show-ref`;
+    const revParse = await $({ cwd: rootPath })`git rev-parse HEAD`;
+    const refLines = showRef.stdout
+      .split(/\r?\n/g)
+      .filter((x) => x.includes(revParse.stdout));
     if (!refLines.length) {
       break tag;
     }
     for (const refLine of refLines) {
-      const refName = refLine.split(" ").at(-1)!
-      const match = refName.match(/^refs\/tags\/(.+)/)
+      const refName = refLine.split(" ").at(-1)!;
+      const match = refName.match(/^refs\/tags\/(.+)/);
       if (match) {
-        tagTagname = match[1]
+        tagTagname = match[1];
         break;
       }
     }
@@ -132,16 +155,20 @@ tag: {
     }
   }
 
-  tagForce = core.getInput("tag-force") ? core.getBooleanInput("tag-force") : null
+  tagForce = core.getInput("tag-force")
+    ? core.getBooleanInput("tag-force")
+    : null;
   if (tagForce == null) {
     if (!core.getInput("tag-tagname")) {
-      tagForce= true
+      tagForce = true;
     }
   }
 
-  await $({ cwd: rootPath })`git tag ${tagForce ? "--force" : []} ${tagTagname}`
+  await $({ cwd: rootPath })`git tag ${
+    tagForce ? "--force" : []
+  } ${tagTagname}`;
 }
-console.table({ tagTagname, tagForce })
+console.table({ tagTagname, tagForce });
 
 push: {
   const pushRepository = core.getInput("push-repository");
@@ -149,23 +176,27 @@ push: {
   let pushRefspec = core.getInput("push-refspec") || null;
   if (!pushRefspec) {
     if (tagTagname) {
-      pushRefspec = tagTagname
+      pushRefspec = tagTagname;
     }
 
-    const { stdout } = await $({ cwd: rootPath })`git rev-parse --abbrev-ref HEAD`
+    const { stdout } = await $({
+      cwd: rootPath,
+    })`git rev-parse --abbrev-ref HEAD`;
     if (stdout === "HEAD") {
-      throw new DOMException("no branch detectable")
+      throw new DOMException("no branch detectable");
     } else {
-      pushRefspec = stdout
+      pushRefspec = stdout;
     }
   }
 
-  let pushForce = core.getInput("push-force") ? core.getBooleanInput("push-force") : null;
+  let pushForce = core.getInput("push-force")
+    ? core.getBooleanInput("push-force")
+    : null;
   if (pushForce == null) {
     if (tagTagname && tagForce) {
-      pushForce = true
+      pushForce = true;
     } else {
-      pushForce = false
+      pushForce = false;
     }
   }
 
@@ -180,7 +211,9 @@ push: {
   await $({
     stdio: "inherit",
     cwd: rootPath,
-  })`git push ${pushForce ? "--force" : []} ${pushRepository} ${pushRefspec ? pushRefspec : []}`;
+  })`git push ${pushForce ? "--force" : []} ${pushRepository} ${
+    pushRefspec ? pushRefspec : []
+  }`;
 
   core.setOutput("pushed", true);
 }
