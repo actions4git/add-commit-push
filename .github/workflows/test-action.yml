@@ -15,7 +15,7 @@ jobs:
       - run: git commit --message 'Trigger branch'
       - run: git push --force
       - run: echo 'https://github.com/actions4git/add-commit-push-test/actions/workflows/test-branch.yml' >> "$GITHUB_STEP_SUMMARY"
-      - run: sleep 10s
+      - run: sleep 30s
   tag:
     needs: branch
     runs-on: ubuntu-latest
@@ -30,7 +30,7 @@ jobs:
       - run: git tag --force v0.0.0
       - run: git push --force origin v0.0.0
       - run: echo 'https://github.com/actions4git/add-commit-push-test/actions/workflows/test-tag.yml' >> "$GITHUB_STEP_SUMMARY"
-      - run: sleep 10s
+      - run: sleep 30s
   pull-request:
     needs: tag
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
       - run: git commit --message 'Trigger pull-request'
       - run: git push --force origin main:pull-request
       - run: echo 'https://github.com/actions4git/add-commit-push-test/actions/workflows/test-pull-request.yml' >> "$GITHUB_STEP_SUMMARY"
-      - run: sleep 10s
+      - run: sleep 30s
   pull-request-fork:
     needs: pull-request
     runs-on: ubuntu-latest
@@ -60,4 +60,4 @@ jobs:
         env:
           TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
       - run: echo 'https://github.com/actions4git/add-commit-push-test/actions/workflows/test-pull-request-fork.yml' >> "$GITHUB_STEP_SUMMARY"
-      - run: sleep 10s
+      - run: sleep 30s
