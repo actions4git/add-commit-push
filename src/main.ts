@@ -173,6 +173,7 @@ tag: {
 push: {
   let repository = core.getInput("push-repository");
   if (
+    data.type === "unknown" &&
     !repository &&
     root === process.env.GITHUB_WORKSPACE! &&
     github.context.eventName === "pull_request"
@@ -183,6 +184,8 @@ push: {
       // https://github.com/... => https://x:$TOKEN@github.com/...
       repository = repository.replace(/^https:\/\//, `https://x:${token}@`);
     }
+  } else {
+    repository = "origin";
   }
   core.info(`push: repository=${repository}`);
 
@@ -193,6 +196,7 @@ push: {
     } else if (data.type === "branch") {
       refspec = `HEAD:${data.branch}`;
     } else if (
+      data.type === "unknown" &&
       root === process.env.GITHUB_WORKSPACE! &&
       github.context.eventName === "pull_request"
     ) {
@@ -205,11 +209,45 @@ push: {
   }
   core.info(`push: refspec=${refspec}`);
 
+  if (
+    github.context.payload.pull_request!.head.repo.full_name ===
+    github.context.repo.repo
+  ) {
+    core.info(`push: pull request is same repository`);
+  } else {
+    core.info(
+      `push: pull request is different repository head=${
+        github.context.payload.pull_request!.head.repo.full_name
+      } repo=${github.context.repo.repo}`
+    );
+  }
+
   const force = core.getInput("push-force")
     ? core.getBooleanInput("push-force")
     : data.type === "tag";
   core.info(`push: force=${force}`);
 
-  await push(repository, refspec, { force });
-  core.setOutput("pushed", true);
+  try {
+    await push(repository, refspec, { force });
+    core.setOutput("pushed", true);
+  } catch (error: any) {
+    if (
+      error?.message.includes("403") &&
+      github.context.payload.pull_request!.head.repo.full_name !==
+        github.context.repo.repo
+    ) {
+      core.error(
+        `🔑 Need a token that has permission to push to cross-fork Pull Request from ${
+          github.context.payload.pull_request!.head.repo.full_name
+        } ${github.context.payload.pull_request!.head.ref} to ${
+          github.context.repo.repo
+        } ${
+          github.context.ref
+        }. You probably need a personal access token for this.`
+      );
+      throw error;
+    } else {
+      throw error;
+    }
+  }
 }
