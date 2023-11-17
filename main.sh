@@ -7,19 +7,19 @@ cd "$INPUT_PATH"
 
 git status --verbose
 
-add_pathspec=$(printenv INPUT_ADD-PATHSPEC)
-[[ -n $add_pathspec ]] || add_pathspec=$(printenv INPUT_ADD-PATHSPECS)
-[[ -n $add_pathspec ]] || add_pathspec=$(printenv INPUT_ADD-PATH)
-[[ -n $add_pathspec ]] || add_pathspec=$(printenv INPUT_ADD-PATHS)
+add_pathspec=$(printenv INPUT_ADD-PATHSPEC || true)
+[[ -n $add_pathspec ]] || add_pathspec=$(printenv INPUT_ADD-PATHSPECS || true)
+[[ -n $add_pathspec ]] || add_pathspec=$(printenv INPUT_ADD-PATH || true)
+[[ -n $add_pathspec ]] || add_pathspec=$(printenv INPUT_ADD-PATHS || true)
 echo "add_pathspec=$add_pathspec"
 
-add_pathspec_file=$(printenv INPUT_ADD-PATHSPEC-FILE)
-[[ -n $add_pathspec_file ]] || add_pathspec_file=$(printenv INPUT_ADD-PATHSPECS-FILE)
-[[ -n $add_pathspec_file ]] || add_pathspec_file=$(printenv INPUT_ADD-PATH-FILE)
-[[ -n $add_pathspec_file ]] || add_pathspec_file=$(printenv INPUT_ADD-PATHS-FILE)
+add_pathspec_file=$(printenv INPUT_ADD-PATHSPEC-FILE || true)
+[[ -n $add_pathspec_file ]] || add_pathspec_file=$(printenv INPUT_ADD-PATHSPECS-FILE || true)
+[[ -n $add_pathspec_file ]] || add_pathspec_file=$(printenv INPUT_ADD-PATH-FILE || true)
+[[ -n $add_pathspec_file ]] || add_pathspec_file=$(printenv INPUT_ADD-PATHS-FILE || true)
 echo "add_pathspec_file=$add_pathspec_file"
 
-add_force=$(printenv INPUT_ADD-FORCE)
+add_force=$(printenv INPUT_ADD-FORCE || true)
 if [[ $add_force == 1 || $add_force == true ]]; then
   add_force_flag='--force'
 fi
@@ -42,13 +42,13 @@ if git diff --cached --exit-code --quiet; then
   echo 'No changes detected'
   echo "committed=false" >> $GITHUB_OUTPUT
 else
-  commit_author_name=$(printenv INPUT_COMMIT-AUTHOR-NAME)
-  commit_author_email=$(printenv INPUT_COMMIT-AUTHOR-EMAIL)
+  commit_author_name=$(printenv INPUT_COMMIT-AUTHOR-NAME || true)
+  commit_author_email=$(printenv INPUT_COMMIT-AUTHOR-EMAIL || true)
   echo "original commit_author_name=$commit_author_name"
   echo "original commit_author_email=$commit_author_email"
 
   # 'Name here <emailhere@example.org>'
-  commit_author=$(printenv INPUT_COMMIT-AUTHOR)
+  commit_author=$(printenv INPUT_COMMIT-AUTHOR || true)
   echo "original commit_author=$commit_author"
 
   if echo "$commit_author" | grep -qP '^\s*@?(github[-_])?actions?(\[bot\])?\s*$'; then
@@ -79,13 +79,13 @@ else
   echo "processed commit_author_name=$commit_author_name"
   echo "processed commit_author_email=$commit_author_email"
 
-  commit_committer_name=$(printenv INPUT_COMMIT-COMMITTER-NAME)
-  commit_committer_email=$(printenv INPUT_COMMIT-COMMITTER-EMAIL)
+  commit_committer_name=$(printenv INPUT_COMMIT-COMMITTER-NAME || true)
+  commit_committer_email=$(printenv INPUT_COMMIT-COMMITTER-EMAIL || true)
   echo "original commit_committer_name=$commit_committer_name"
   echo "original commit_committer_email=$commit_committer_email"
 
   # 'Name here <emailhere@exampleorg>'
-  commit_committer=$(printenv INPUT_COMMIT-COMMITTER)
+  commit_committer=$(printenv INPUT_COMMIT-COMMITTER || true)
   echo "original commit_committer=$commit_committer"
 
   if echo "$commit_committer" | grep -qP '^\s*@?(github[-_])?actions?(\[bot\])?\s*$'; then
@@ -116,13 +116,13 @@ else
   echo "processed commit_committer_name=$commit_committer_name"
   echo "processed commit_committer_email=$commit_committer_email"
 
-  commit_message=$(printenv INPUT_COMMIT-MESSAGE)
+  commit_message=$(printenv INPUT_COMMIT-MESSAGE || true)
   echo "commit_message=$commit_message"
 
-  commit_message_file=$(printenv INPUT_COMMIT-MESSAGE-FILE)
+  commit_message_file=$(printenv INPUT_COMMIT-MESSAGE-FILE || true)
   echo "commit_message_file=$commit_message_file"
 
-  commit_date=$(printenv INPUT_COMMIT-DATE)
+  commit_date=$(printenv INPUT_COMMIT-DATE || true)
   if [[ -n $commit_date ]]; then
     commit_date_flag="--date=$commit_date"
   fi
@@ -152,24 +152,24 @@ fi
 
 git status --verbose
 
-push_repository=$(printenv INPUT_PUSH-REPOSITORY)
-[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-REPO)
-[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-REMOTE)
-[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO)
-[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO-REPO)
-[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO-REPOSITORY)
-[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO-REMOTE)
+push_repository=$(printenv INPUT_PUSH-REPOSITORY || true)
+[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-REPO || true)
+[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-REMOTE || true)
+[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO || true)
+[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO-REPO || true)
+[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO-REPOSITORY || true)
+[[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO-REMOTE || true)
 [[ -n $push_repository ]] || push_repository=origin
 echo "push_repository=$push_repository"
 
 if git cherry -v origin | grep -qP '^\+'; then
-  push_refspec=$(printenv INPUT_PUSH-REFSPEC)
-  [[ -n $push_refspec ]] || push_refspec=$(printenv INPUT_PUSH-REF)
-  [[ -n $push_refspec ]] || push_refspec=$(printenv INPUT_PUSH-BRANCH)
-  [[ -n $push_refspec ]] || push_refspec=$(printenv INPUT_PUSH-TAG)
+  push_refspec=$(printenv INPUT_PUSH-REFSPEC || true)
+  [[ -n $push_refspec ]] || push_refspec=$(printenv INPUT_PUSH-REF || true)
+  [[ -n $push_refspec ]] || push_refspec=$(printenv INPUT_PUSH-BRANCH || true)
+  [[ -n $push_refspec ]] || push_refspec=$(printenv INPUT_PUSH-TAG || true)
   echo "original push_refspec=$push_refspec"
 
-  push_all=$(printenv INPUT_PUSH-ALL)
+  push_all=$(printenv INPUT_PUSH-ALL || true)
   if [[ $push_all == 1 || $push_all == true ]]; then
     push_refspec='all'
   fi
@@ -188,7 +188,7 @@ if git cherry -v origin | grep -qP '^\+'; then
 
   echo "processed push_refspec=$push_refspec"
 
-  push_force=$(printenv INPUT_PUSH-FORCE)
+  push_force=$(printenv INPUT_PUSH-FORCE || true)
   if [[ $push_force == 1 || $push_force == true ]]; then
     push_force_flag='--force'
   fi
