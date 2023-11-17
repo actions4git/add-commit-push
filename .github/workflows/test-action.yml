@@ -1,63 +1,28 @@
 name: Test action
 on:
-  workflow_dispatch:
-concurrency: ${{ github.workflow }}
+  push:
+    branches: "main"
+    paths-ignore:
+      - README.md
+      - LICENSE
+      - .gitignore
+      - .github/**
+      - "!.github/workflows/test-action.yml"
+  pull_request:
+    paths-ignore:
+      - README.md
+      - LICENSE
+      - .gitignore
+      - .github/**
+      - "!.github/workflows/test-action.yml"
 jobs:
   branch:
+    concurrency: ${{ github.workflow }}-branch
     runs-on: ubuntu-latest
     steps:
-      - uses: actions4git/setup-git@v1
-      - run: git clone "https://x:$TOKEN@github.com/actions4git/add-commit-push-test.git" .
-        env:
-          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
-      - run: echo '{"sha":"${{ github.sha }}"}' > branch.json
-      - run: git add --all
-      - run: git commit --message 'Trigger branch'
-      - run: git push --force
-      - run: echo 'https://github.com/actions4git/add-commit-push-test/actions/workflows/test-branch.yml' >> "$GITHUB_STEP_SUMMARY"
-      - run: sleep 30s
-  tag:
-    needs: branch
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions4git/setup-git@v1
-      - run: git clone "https://x:$TOKEN@github.com/actions4git/add-commit-push-test.git" .
-        env:
-          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
-      - run: echo '{"sha":"${{ github.sha }}"}' > tag.json
-      - run: git add --all
-      - run: git commit --message 'Trigger tag'
-      - run: git tag --force v0.0.0
-      - run: git push --force origin v0.0.0
-      - run: echo 'https://github.com/actions4git/add-commit-push-test/actions/workflows/test-tag.yml' >> "$GITHUB_STEP_SUMMARY"
-      - run: sleep 30s
-  pull-request:
-    needs: tag
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions4git/setup-git@v1
-      - run: git clone "https://x:$TOKEN@github.com/actions4git/add-commit-push-test.git" .
-        env:
-          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
-      - run: echo '{"sha":"${{ github.sha }}"}' > pull-request.json
-      - run: git add --all
-      - run: git commit --message 'Trigger pull-request'
-      - run: git push --force origin main:pull-request
-      - run: echo 'https://github.com/actions4git/add-commit-push-test/actions/workflows/test-pull-request.yml' >> "$GITHUB_STEP_SUMMARY"
-      - run: sleep 30s
-  pull-request-fork:
-    needs: pull-request
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions4git/setup-git@v1
-      - run: git clone "https://x:$TOKEN@github.com/actions4git/add-commit-push-test.git" .
-        env:
-          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
-      - run: echo '{"sha":"${{ github.sha }}"}' > pull-request-fork.json
-      - run: git add --all
-      - run: git commit --message 'Trigger pull-request-fork'
-      - run: git push --force "https://x:$TOKEN@github.com/actions4git/add-commit-push-test-pull-request-fork.git" main
-        env:
-          TOKEN: ${{ secrets.ADD_COMMIT_PUSH_TEST_TOKEN }}
-      - run: echo 'https://github.com/actions4git/add-commit-push-test/actions/workflows/test-pull-request-fork.yml' >> "$GITHUB_STEP_SUMMARY"
-      - run: sleep 30s
+      - uses: actions/checkout@v4
+      - run: echo $RANDOM > random.txt
+      - uses: ./
+        with:
+          push-branch: test-branch
+          push-force: true
