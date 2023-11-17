@@ -10,22 +10,28 @@ add_pathspec=$(printenv INPUT_ADD-PATHSPEC)
 [[ -n $add_pathspec ]] || add_pathspec=$(printenv INPUT_ADD-PATHSPECS)
 [[ -n $add_pathspec ]] || add_pathspec=$(printenv INPUT_ADD-PATH)
 [[ -n $add_pathspec ]] || add_pathspec=$(printenv INPUT_ADD-PATHS)
+echo "add_pathspec=$add_pathspec"
 
 add_pathspec_file=$(printenv INPUT_ADD-PATHSPEC-FILE)
 [[ -n $add_pathspec_file ]] || add_pathspec_file=$(printenv INPUT_ADD-PATHSPECS-FILE)
 [[ -n $add_pathspec_file ]] || add_pathspec_file=$(printenv INPUT_ADD-PATH-FILE)
 [[ -n $add_pathspec_file ]] || add_pathspec_file=$(printenv INPUT_ADD-PATHS-FILE)
+echo "add_pathspec_file=$add_pathspec_file"
 
 add_force=$(printenv INPUT_ADD-FORCE)
 if [[ $add_force == 1 || $add_force == true ]]; then
   add_force_flag='--force'
 fi
+echo "add_force_flag=$add_force_flag"
 
 if [[ -n $add_pathspec ]]; then
+  echo "using pathspec from input"
   echo "$add_pathspec" | git add --pathspec-from-file=- $add_force_flag --verbose
 elif [[ -n $add_pathspec_file ]]; then
+  echo "using pathspec from file"
   git add --pathspec-from-file="$add_pathspec_file" $add_force_flag --verbose
 else
+  echo "using --all"
   git add --all $add_force_flag --verbose
 fi
 
@@ -37,9 +43,12 @@ if git diff --cached --exit-code --quiet; then
 else
   commit_author_name=$(printenv INPUT_COMMIT-AUTHOR-NAME)
   commit_author_email=$(printenv INPUT_COMMIT-AUTHOR-EMAIL)
+  echo "original commit_author_name=$commit_author_name"
+  echo "original commit_author_email=$commit_author_email"
 
   # 'Name here <emailhere@example.org>'
   commit_author=$(printenv INPUT_COMMIT-AUTHOR)
+  echo "original commit_author=$commit_author"
 
   if echo "$commit_author" | grep -qP '^\s*@?(github[-_])?actions?(\[bot\])?\s*$'; then
     commit_author='github-actions[bot]'
@@ -66,11 +75,17 @@ else
   [[ -n $commit_author_name ]] || commit_author_name='github-actions[bot]'
   [[ -n $commit_author_email ]] || commit_author_email='github-actions[bot]@users.noreply.github.com'
 
+  echo "processed commit_author_name=$commit_author_name"
+  echo "processed commit_author_email=$commit_author_email"
+
   commit_committer_name=$(printenv INPUT_COMMIT-COMMITTER-NAME)
   commit_committer_email=$(printenv INPUT_COMMIT-COMMITTER-EMAIL)
+  echo "original commit_committer_name=$commit_committer_name"
+  echo "original commit_committer_email=$commit_committer_email"
 
   # 'Name here <emailhere@exampleorg>'
   commit_committer=$(printenv INPUT_COMMIT-COMMITTER)
+  echo "original commit_committer=$commit_committer"
 
   if echo "$commit_committer" | grep -qP '^\s*@?(github[-_])?actions?(\[bot\])?\s*$'; then
     commit_committer_name='github-actions[bot]'
@@ -97,24 +112,33 @@ else
   [[ -n $commit_committer_name ]] || commit_committer_name=$commit_author_name
   [[ -n $commit_committer_email ]] || commit_committer_email=$commit_author_email
 
+  echo "processed commit_committer_name=$commit_committer_name"
+  echo "processed commit_committer_email=$commit_committer_email"
+
   commit_message=$(printenv INPUT_COMMIT-MESSAGE)
+  echo "commit_message=$commit_message"
 
   commit_message_file=$(printenv INPUT_COMMIT-MESSAGE-FILE)
+  echo "commit_message_file=$commit_message_file"
 
   commit_date=$(printenv INPUT_COMMIT-DATE)
   if [[ -n $commit_date ]]; then
     commit_date_flag="--date=$commit_date"
   fi
+  echo "commit_date_flag=$commit_date_flag"
 
   export GIT_AUTHOR_NAME="$commit_author_name"
   export GIT_AUTHOR_EMAIL="$commit_author_email"
   export GIT_COMMITTER_NAME="$commit_committer_name"
   export GIT_COMMITTER_EMAIL="$commit_committer_email"
   if [[ -n $commit_message ]]; then
+    echo "committing with message"
     git commit --message="$commit_message" --verbose $commit_date_flag
   elif [[ -n $commit_message_file ]]; then
+    echo "committing with message file"
     git commit --file="$commit_message_file" --verbose $commit_date_flag
   else
+    echo "committing with default message"
     git commit --message="Automated changes" --verbose $commit_date_flag
   fi
   unset GIT_AUTHOR_NAME
@@ -135,12 +159,14 @@ push_repository=$(printenv INPUT_PUSH-REPOSITORY)
 [[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO-REPOSITORY)
 [[ -n $push_repository ]] || push_repository=$(printenv INPUT_PUSH-TO-REMOTE)
 [[ -n $push_repository ]] || push_repository=origin
+echo "push_repository=$push_repository"
 
 if git cherry -v origin | grep -qP '^\+'; then
   push_refspec=$(printenv INPUT_PUSH-REFSPEC)
   [[ -n $push_refspec ]] || push_refspec=$(printenv INPUT_PUSH-REF)
   [[ -n $push_refspec ]] || push_refspec=$(printenv INPUT_PUSH-BRANCH)
   [[ -n $push_refspec ]] || push_refspec=$(printenv INPUT_PUSH-TAG)
+  echo "original push_refspec=$push_refspec"
 
   push_all=$(printenv INPUT_PUSH-ALL)
   if [[ $push_all == 1 || $push_all == true ]]; then
@@ -159,14 +185,19 @@ if git cherry -v origin | grep -qP '^\+'; then
     fi
   fi
 
+  echo "processed push_refspec=$push_refspec"
+
   push_force=$(printenv INPUT_PUSH-FORCE)
   if [[ $push_force == 1 || $push_force == true ]]; then
     push_force_flag='--force'
   fi
+  echo "push_force_flag=$push_force_flag"
 
   if [[ -n $push_refspec ]]; then
+    echo "pushing with refspec"
     git push "$push_repository" "$push_refspec" $push_force_flag --verbose
   else
+    echo "pushing with no refspec"
     git push "$push_repository" $push_force_flag --verbose
   fi
   echo "pushed=true" >> $GITHUB_OUTPUT
