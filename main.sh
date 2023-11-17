@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 [[ $RUNNER_DEBUG != 1 ]] || set -x
+[[ $RUNNER_DEBUG != 1 ]] || printenv
 
 cd "$INPUT_PATH"
 
