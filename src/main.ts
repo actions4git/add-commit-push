@@ -178,7 +178,7 @@ push: {
     root === process.env.GITHUB_WORKSPACE! &&
     github.context.eventName === "pull_request"
   ) {
-    repository = github.context.payload.pull_request!.head.repo.clone_url;
+    repository = github.context.payload.pull_request?.head.repo.clone_url;
     const token = core.getInput("push-token");
     if (token) {
       // https://github.com/... => https://x:$TOKEN@github.com/...
@@ -209,17 +209,19 @@ push: {
   }
   core.info(`push: refspec=${refspec}`);
 
-  if (
-    github.context.payload.pull_request!.head.repo.full_name ===
-    github.context.repo.repo
-  ) {
-    core.info(`push: pull request is same repository`);
-  } else {
-    core.info(
-      `push: pull request is different repository head=${
-        github.context.payload.pull_request!.head.repo.full_name
-      } repo=${github.context.repo.repo}`
-    );
+  if (github.context.eventName === "pull_request") {
+    if (
+      github.context.payload.pull_request!.head.repo.full_name ===
+      github.context.repo.repo
+    ) {
+      core.info(`push: pull request is same repository`);
+    } else {
+      core.info(
+        `push: pull request is different repository head=${
+          github.context.payload.pull_request!.head.repo.full_name
+        } repo=${github.context.repo.repo}`
+      );
+    }
   }
 
   const force = core.getInput("push-force")
@@ -232,6 +234,7 @@ push: {
     core.setOutput("pushed", true);
   } catch (error: any) {
     if (
+      github.context.eventName === "pull_request" &&
       error?.message.includes("403") &&
       github.context.payload.pull_request!.head.repo.full_name !==
         github.context.repo.repo
